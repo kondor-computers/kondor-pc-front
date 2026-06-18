@@ -14,11 +14,14 @@ export function resolveOpengraphImageUrl(
     .url();
 }
 
+import type { BuildImage } from "@/types/build";
+import { buildImageUrl } from "@/lib/build/images";
+
 export function resolveProductImageUrl(
-  build: { heroImageUrl?: string; seo?: PageSeo | null },
+  build: { heroImage?: BuildImage; seo?: PageSeo | null },
 ): string {
   return (
-    build.heroImageUrl ??
+    buildImageUrl(build.heroImage) ??
     resolveOpengraphImageUrl(build.seo) ??
     DEFAULT_SOCIAL_IMAGE_URL
   );

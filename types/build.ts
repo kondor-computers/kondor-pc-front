@@ -74,6 +74,11 @@ export interface ConfigGroup {
   options: ConfigOption[];
 }
 
+export interface BuildImage {
+  url: string;
+  alt?: string;
+}
+
 export interface Build {
   slug: SkuSlug;
   /** Артикул для CRM / інвентаризації (Sanity `build.sku`). */
@@ -104,20 +109,20 @@ export interface Build {
     answer: string;
     answerContent: ContentNode[];
   }>;
-  /** Optional chassis photo — replaces ChassisArt SVG when present. Any absolute URL (Sanity CDN, Unsplash, etc.). */
-  heroImageUrl?: string;
-  /** Additional gallery shots. Future: from Sanity `gallery[]`. */
-  galleryImageUrls?: string[];
+  /** Optional chassis photo — replaces ChassisArt SVG when present. */
+  heroImage?: BuildImage;
+  /** Additional gallery shots from Sanity `gallery[]`. */
+  galleryImages?: BuildImage[];
   /** Відео збірки в галереї hero. MP4 або YouTube (Sanity `assemblyVideoUrl`). */
   assemblyVideoUrl?: string;
   /** Постер відео збірки (Sanity `assemblyVideoPoster`). */
-  assemblyVideoPosterUrl?: string;
+  assemblyVideoPoster?: BuildImage;
   /** Дата публікації відеозвіту (Sanity `assemblyVideoUploadDate`, ISO). */
   assemblyVideoUploadDate?: string;
   /** Відео секції «Реальні тести» (Sanity `gameplayVideoUrl`). */
   gameplayVideoUrl?: string;
   /** Постер відео секції «Реальні тести» (Sanity `gameplayVideoPoster`). */
-  gameplayVideoPosterUrl?: string;
+  gameplayVideoPoster?: BuildImage;
   /** Дата публікації геймплей-відео (Sanity `gameplayVideoUploadDate`, ISO). */
   gameplayVideoUploadDate?: string;
   /** Optional upgrade/option groups shown on the PC page configurator. When absent — configurator is hidden. */
@@ -157,8 +162,7 @@ export interface BuildBenefit {
 
 export interface Review {
   authorName: string;
-  /** Author photo — defaults to shared review avatar in mock data. */
-  imageUrl: string;
+  image: BuildImage;
   rating: 1 | 2 | 3 | 4 | 5;
   text: string;
   sourcePlatform: "google" | "instagram" | "telegram" | "direct";

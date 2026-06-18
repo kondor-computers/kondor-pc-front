@@ -6,6 +6,11 @@ import { PriceBlock } from "@/components/shared/PriceBlock";
 import { TechButtonDisplay } from "@/components/shared/TechButtonPrimitives";
 import { ChassisArt } from "@/components/brand/ChassisArt";
 import type { Build } from "@/types/build";
+import {
+  defaultBuildImageAlt,
+  resolveBuildHeroImage,
+  resolveImageAlt,
+} from "@/lib/build/images";
 import { fpsTier, FPS_TIER_META } from "@/lib/fps-thresholds";
 import { lcpImageUrl } from "@/lib/sanity/lcpImageUrl";
 
@@ -55,8 +60,8 @@ export function BuildCardStatic({
           ? "Немає в наявності"
           : "Архів";
 
-  const heroImage =
-    build.galleryImageUrls?.[0] ?? build.heroImageUrl ?? null;
+  const heroImage = resolveBuildHeroImage(build);
+  const defaultAlt = defaultBuildImageAlt();
 
   return (
     <Link
@@ -91,8 +96,8 @@ export function BuildCardStatic({
           </div>
           {heroImage ? (
             <Image
-              src={priority ? lcpImageUrl(heroImage) : heroImage}
-              alt={`${build.name} — ігровий ПК`}
+              src={priority ? lcpImageUrl(heroImage.url) : heroImage.url}
+              alt={resolveImageAlt(heroImage, defaultAlt)}
               fill
               sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 90vw"
               quality={priority ? 80 : undefined}

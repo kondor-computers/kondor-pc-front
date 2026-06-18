@@ -1,5 +1,6 @@
 import { Star } from "lucide-react";
 import type { Review } from "@/types/build";
+import { resolveImageAlt } from "@/lib/build/images";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 
@@ -23,8 +24,8 @@ export function ReviewCard({
     >
       <div className="relative w-full aspect-[290/146]">
         <Image
-          src={review.imageUrl}
-          alt={review.authorName}
+          src={review.image.url}
+          alt={resolveImageAlt(review.image, review.authorName)}
           fill
           className="object-cover"
         />

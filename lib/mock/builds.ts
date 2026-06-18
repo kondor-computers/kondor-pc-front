@@ -410,14 +410,12 @@ export const BUILDS: Build[] = [
 ];
 
 // Attach placeholder hero photography to each build.
-// This lives in mock-land; swap for Sanity-derived `heroImageUrl` when CMS is online.
 BUILDS.forEach((b, i) => {
-  b.heroImageUrl = HERO_PHOTOS[b.slug];
-  // Hero + two additional shots cycled from the pool (offsets avoid hero duplicate).
-  b.galleryImageUrls = [
-    HERO_PHOTOS[b.slug],
-    UNSPLASH(GALLERY_POOL[(i + 2) % GALLERY_POOL.length]),
-    UNSPLASH(GALLERY_POOL[(i + 5) % GALLERY_POOL.length]),
+  b.heroImage = { url: HERO_PHOTOS[b.slug] };
+  b.galleryImages = [
+    { url: HERO_PHOTOS[b.slug] },
+    { url: UNSPLASH(GALLERY_POOL[(i + 2) % GALLERY_POOL.length]) },
+    { url: UNSPLASH(GALLERY_POOL[(i + 5) % GALLERY_POOL.length]) },
   ];
 });
 

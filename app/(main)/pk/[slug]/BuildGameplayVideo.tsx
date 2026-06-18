@@ -3,6 +3,8 @@
 import Image from "next/image";
 import { Play } from "lucide-react";
 import { useState } from "react";
+import type { BuildImage } from "@/types/build";
+import { GAMEPLAY_VIDEO_POSTER_FALLBACK_ALT, resolveImageAlt } from "@/lib/build/images";
 
 function detectYouTubeId(url: string): string | null {
   const m = url.match(
@@ -13,15 +15,17 @@ function detectYouTubeId(url: string): string | null {
 
 export function BuildGameplayVideo({
   videoUrl,
-  posterUrl,
+  poster,
   buildName,
 }: {
   videoUrl: string;
-  posterUrl?: string;
+  poster?: BuildImage;
   buildName: string;
 }) {
   const [playing, setPlaying] = useState(false);
   const youTubeId = detectYouTubeId(videoUrl);
+  const posterUrl = poster?.url;
+  const posterAlt = resolveImageAlt(poster, GAMEPLAY_VIDEO_POSTER_FALLBACK_ALT);
 
   return (
     <div className="relative mx-auto max-w-4xl">
@@ -53,7 +57,7 @@ export function BuildGameplayVideo({
             {posterUrl ? (
               <Image
                 src={posterUrl}
-                alt={`Реальні тести ${buildName}`}
+                alt={posterAlt}
                 fill
                 sizes="(min-width: 896px) 896px, 100vw"
                 className="object-cover"

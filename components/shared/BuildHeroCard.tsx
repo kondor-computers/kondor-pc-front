@@ -9,6 +9,11 @@ import { PriceBlock } from "@/components/shared/PriceBlock";
 import { TechButtonDisplay } from "@/components/shared/TechButtonPrimitives";
 import { ChassisArt } from "@/components/brand/ChassisArt";
 import type { Build } from "@/types/build";
+import {
+  defaultBuildImageAlt,
+  resolveBuildGalleryImages,
+  resolveImageAlt,
+} from "@/lib/build/images";
 import { fpsTier, FPS_TIER_META } from "@/lib/fps-thresholds";
 import { formatPrice } from "@/lib/format";
 
@@ -38,12 +43,8 @@ export function BuildHeroCard({
   priority?: boolean;
   className?: string;
 }) {
-  const images: string[] =
-    build.galleryImageUrls && build.galleryImageUrls.length > 0
-      ? build.galleryImageUrls
-      : build.heroImageUrl
-        ? [build.heroImageUrl]
-        : [];
+  const images = resolveBuildGalleryImages(build);
+  const defaultAlt = defaultBuildImageAlt();
   const hasMany = images.length > 1;
   const [imageIndex, setImageIndex] = useState(0);
 
@@ -86,13 +87,13 @@ export function BuildHeroCard({
         <div className="relative aspect-[4/3] w-full overflow-hidden rounded-md">
           <ChassisArt className="absolute inset-0 size-full" />
 
-          {images.map((src, i) => {
+          {images.map((image, i) => {
             const visible = i === imageIndex;
             return (
               <Image
-                key={src + i}
-                src={src}
-                alt={visible ? `${build.name} — ігровий ПК` : ""}
+                key={image.url + i}
+                src={image.url}
+                alt={visible ? resolveImageAlt(image, defaultAlt) : ""}
                 fill
                 sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 90vw"
                 priority={priority && i === 0}

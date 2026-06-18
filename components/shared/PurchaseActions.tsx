@@ -11,6 +11,7 @@ import {
   FLY_DURATION_MS,
 } from "@/components/cart/AddToCartAnimation";
 import type { SkuSlug } from "@/types/build";
+import { buildImageUrl } from "@/lib/build/images";
 import { cn } from "@/lib/utils";
 
 export function PurchaseActions({
@@ -37,7 +38,7 @@ export function PurchaseActions({
     left: number;
   } | null>(null);
 
-  const image = config?.build.heroImageUrl;
+  const image = buildImageUrl(config?.build.heroImage);
 
   const unitPriceUah = config?.resolvedPriceUah ?? priceUah;
   const options = config?.cartOptions;

@@ -5,6 +5,8 @@ import dynamic from "next/dynamic";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { ChassisArt } from "@/components/brand/ChassisArt";
+import type { BuildImage } from "@/types/build";
+import { ASSEMBLY_VIDEO_POSTER_FALLBACK_ALT, resolveImageAlt } from "@/lib/build/images";
 import { lockBodyScroll } from "@/lib/bodyScrollLock";
 import { cn } from "@/lib/utils";
 
@@ -13,13 +15,14 @@ const Lightbox = dynamic(() => import("yet-another-react-lightbox"), {
 });
 
 type InternalSlide =
-  | { kind: "image"; src: string }
+  | { kind: "image"; src: string; alt: string }
   | {
       kind: "video";
       src: string;
       isYouTube: boolean;
       youTubeId?: string;
       poster?: string;
+      posterAlt?: string;
     };
 
 function detectYouTubeId(url: string): string | null {
@@ -32,17 +35,17 @@ function detectYouTubeId(url: string): string | null {
 export function ProductGallery({
   images,
   videoUrl,
-  videoPosterUrl,
-  alt,
+  videoPoster,
+  defaultAlt,
   priority = false,
   /** When true, slide 0 is transparent — server LCP image shows through. */
   overlayMode = false,
   className,
 }: {
-  images: string[];
+  images: BuildImage[];
   videoUrl?: string;
-  videoPosterUrl?: string;
-  alt: string;
+  videoPoster?: BuildImage;
+  defaultAlt: string;
   priority?: boolean;
   overlayMode?: boolean;
   className?: string;
@@ -50,12 +53,17 @@ export function ProductGallery({
   const galleryGlowStyle = { ["--sku" as string]: "var(--brand-primary)" };
 
   const slides = useMemo<InternalSlide[]>(() => {
-    const imageSlides = images.map<InternalSlide>((src) => ({
+    const imageSlides = images.map<InternalSlide>((image) => ({
       kind: "image",
-      src,
+      src: image.url,
+      alt: resolveImageAlt(image, defaultAlt),
     }));
     if (!videoUrl) return imageSlides;
     const youTubeId = detectYouTubeId(videoUrl);
+    const posterAlt = resolveImageAlt(
+      videoPoster,
+      ASSEMBLY_VIDEO_POSTER_FALLBACK_ALT,
+    );
     return [
       ...imageSlides,
       {
@@ -63,10 +71,11 @@ export function ProductGallery({
         src: videoUrl,
         isYouTube: Boolean(youTubeId),
         youTubeId: youTubeId ?? undefined,
-        poster: videoPosterUrl,
+        poster: videoPoster?.url,
+        posterAlt,
       },
     ];
-  }, [images, videoUrl, videoPosterUrl]);
+  }, [images, videoUrl, videoPoster, defaultAlt]);
 
   const [index, setIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
@@ -166,7 +175,7 @@ export function ProductGallery({
           <Image
             key={current.src}
             src={current.src}
-            alt={alt}
+            alt={current.alt}
             fill
             sizes="(min-width: 1024px) 620px, 90vw"
             priority={priority && index === 0}
@@ -178,7 +187,6 @@ export function ProductGallery({
             slide={current}
             visible
             onOpen={() => setLightboxOpen(true)}
-            alt={alt}
           />
         ) : null}
 
@@ -303,7 +311,7 @@ export function ProductGallery({
         }}
         slides={slides.map((slide) =>
           slide.kind === "image"
-            ? { src: slide.src }
+            ? { src: slide.src, alt: slide.alt }
             : // Video slide — use custom payload; rendered via `render.slide` below.
               {
                 src: slide.src,
@@ -361,12 +369,10 @@ function VideoStage({
   slide,
   visible,
   onOpen,
-  alt,
 }: {
   slide: Extract<InternalSlide, { kind: "video" }>;
   visible: boolean;
   onOpen: () => void;
-  alt: string;
 }) {
   return (
     <div
@@ -379,7 +385,7 @@ function VideoStage({
       {slide.poster && (
         <Image
           src={slide.poster}
-          alt={visible ? alt : ""}
+          alt={visible ? (slide.posterAlt ?? "") : ""}
           fill
           sizes="(min-width: 1024px) 620px, 90vw"
           className="relative z-10 object-cover"

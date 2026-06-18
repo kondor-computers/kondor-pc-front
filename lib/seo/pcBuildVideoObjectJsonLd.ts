@@ -1,4 +1,5 @@
 import type { Build } from "@/types/build";
+import { buildImageUrl } from "@/lib/build/images";
 import { SITE_URL } from "@/lib/seo/constants";
 
 type VideoObjectFields = {
@@ -91,7 +92,7 @@ export function pcBuildVideoObjectJsonLd(
     name: `Відеозвіт ПК ${build.name} - Kondor PC`,
     description: `Відеозвіт готового ПК ${build.name} перед відправкою`,
     uploadDate: build.assemblyVideoUploadDate,
-    thumbnailUrl: build.assemblyVideoPosterUrl,
+    thumbnailUrl: buildImageUrl(build.assemblyVideoPoster),
     contentUrl: build.assemblyVideoUrl,
   });
   if (assemblyVideo) schemas.push(assemblyVideo);
@@ -100,7 +101,7 @@ export function pcBuildVideoObjectJsonLd(
     name: `Реальний геймплей на ${build.name} - тест FPS`,
     description: gameplayVideoDescription(build, gameLabels),
     uploadDate: build.gameplayVideoUploadDate,
-    thumbnailUrl: build.gameplayVideoPosterUrl,
+    thumbnailUrl: buildImageUrl(build.gameplayVideoPoster),
     contentUrl: build.gameplayVideoUrl,
   });
   if (gameplayVideo) schemas.push(gameplayVideo);

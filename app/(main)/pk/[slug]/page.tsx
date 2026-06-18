@@ -43,6 +43,12 @@ import { SeoContentBlock } from "@/components/seo/SeoContentBlock";
 import { ProductOgType } from "@/components/seo/ProductOgType";
 import { buildPageMetadata } from "@/lib/sanity/pageSeo";
 import { resolveProductImageUrl } from "@/lib/sanity/seoImage";
+import {
+  buildImageUrl,
+  defaultBuildImageAlt,
+  resolveBuildGalleryImages,
+  resolveImageAlt,
+} from "@/lib/build/images";
 import { LazyMarqueeLine } from "@/components/shared/LazyMarqueeLine";
 import { FaqBlock } from "@/components/shared/FaqBlock";
 import { FpsTable } from "@/components/shared/FpsTable";
@@ -187,10 +193,10 @@ export default async function BuildPage({
       relatedBuildSlug: build.slug,
     })) ?? [];
   const productImageUrl = resolveProductImageUrl(build);
-  const galleryImages =
-    build.galleryImageUrls ?? (build.heroImageUrl ? [build.heroImageUrl] : []);
+  const galleryImages = resolveBuildGalleryImages(build);
   const heroImage = galleryImages[0];
-  const galleryAlt = `${build.name} — ігровий ПК`;
+  const defaultAlt = defaultBuildImageAlt();
+  const heroAlt = heroImage ? resolveImageAlt(heroImage, defaultAlt) : defaultAlt;
   const needsInteractiveGallery =
     galleryImages.length > 1 || Boolean(build.assemblyVideoUrl);
   const faqSchema = faqPageJsonLd(faqs);
@@ -242,14 +248,14 @@ export default async function BuildPage({
           <div className="container-site relative grid gap-10 pb-12 lg:pb-0 lg:grid-cols-[1.1fr_1fr] [&>*]:min-w-0">
             <div className="relative">
               {heroImage ? (
-                <BuildHeroLcpImage src={heroImage} alt={galleryAlt} />
+                <BuildHeroLcpImage src={heroImage.url} alt={heroAlt} />
               ) : null}
               {needsInteractiveGallery ? (
                 <LazyProductGallery
                   images={galleryImages}
                   videoUrl={build.assemblyVideoUrl}
-                  videoPosterUrl={build.assemblyVideoPosterUrl}
-                  alt={galleryAlt}
+                  videoPoster={build.assemblyVideoPoster}
+                  defaultAlt={defaultAlt}
                   overlayMode
                   className="contents"
                 />
@@ -289,7 +295,7 @@ export default async function BuildPage({
             />
             <BuildGameplayVideo
               videoUrl={build.gameplayVideoUrl}
-              posterUrl={build.gameplayVideoPosterUrl}
+              poster={build.gameplayVideoPoster}
               buildName={build.name}
             />
           </Section>
@@ -606,7 +612,7 @@ export default async function BuildPage({
           name={build.name}
           slug={build.slug}
           priceUah={build.priceUah}
-          image={build.heroImageUrl}
+          image={buildImageUrl(build.heroImage)}
         />
         <SeoContentBlock seo={build.seo} scopeKey={`pk-${build.slug}`} />
       </div>

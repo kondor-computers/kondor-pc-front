@@ -8,6 +8,7 @@ import { TechButton } from "@/components/shared/TechButton";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { SKU_ACCENTS, type SkuSlug } from "@/lib/sku-accents";
+import { buildImageUrl } from "@/lib/build/images";
 import { useCartStore } from "@/lib/cartStore";
 import { useProductConfiguratorOptional } from "@/components/shared/ProductConfigurator";
 
@@ -38,7 +39,7 @@ export function StickyMobileBuyBar({
   const config = useProductConfiguratorOptional();
 
   const displayPrice = config?.resolvedPriceUah ?? priceUah;
-  const imageSrc = image ?? config?.build.heroImageUrl;
+  const imageSrc = image ?? buildImageUrl(config?.build.heroImage);
 
   const barRef = useRef<HTMLDivElement>(null);
 

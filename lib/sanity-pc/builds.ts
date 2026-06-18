@@ -2,6 +2,7 @@ import type {
   Build,
   BuildBenefit,
   BuildFpsEntry,
+  BuildImage,
   ConfigGroup,
   ConfigOption,
   Review,
@@ -12,6 +13,11 @@ import { SANITY_REVALIDATE_SECONDS } from "@/lib/sanity/revalidate";
 import { portableTextToContent, portableTextToPlain } from "@/lib/sanity/portableText";
 import { normalizeSanityDatetime } from "@/lib/sanity/normalizeDatetime";
 import { SEO_SETTINGS_PROJECTION } from "@/lib/sanity/siteSeoQueries";
+import {
+  ASSEMBLY_VIDEO_POSTER_FALLBACK_ALT,
+  defaultBuildImageAlt,
+  GAMEPLAY_VIDEO_POSTER_FALLBACK_ALT,
+} from "@/lib/build/images";
 import { sanityPcClient } from "./client";
 import { urlForPc } from "./image";
 
@@ -278,6 +284,23 @@ function toImageUrl(image: unknown): string | undefined {
   }
 }
 
+type SanityImageWithAlt = {
+  alt?: string;
+};
+
+function toBuildImage(
+  image: unknown,
+  fallbackAlt?: string,
+): BuildImage | undefined {
+  const url = toImageUrl(image);
+  if (!url) return undefined;
+  const alt = (image as SanityImageWithAlt).alt?.trim();
+  return {
+    url,
+    ...(alt ? { alt } : fallbackAlt ? { alt: fallbackAlt } : {}),
+  };
+}
+
 function mapSourcePlatform(value?: string): Review["sourcePlatform"] {
   if (value === "google" || value === "instagram" || value === "telegram" || value === "direct") {
     return value;
@@ -297,10 +320,14 @@ function mapOneReview(row: RawReviewRow, buildSlug: Build["slug"]): Review | nul
   if (!authorName || !text) return null;
 
   const imageUrl = toImageUrl(row.authorPhoto) ?? DEFAULT_REVIEW_CARD_IMAGE;
+  const imageAlt = (row.authorPhoto as SanityImageWithAlt | undefined)?.alt?.trim();
 
   return {
     authorName,
-    imageUrl,
+    image: {
+      url: imageUrl,
+      ...(imageAlt ? { alt: imageAlt } : { alt: authorName }),
+    },
     rating: clampRating(typeof row.rating === "number" ? row.rating : 5),
     text,
     sourcePlatform: mapSourcePlatform(row.sourcePlatform),
@@ -400,13 +427,20 @@ export function collectHomepageReviews(builds: Build[], limit = 3): Review[] {
 }
 
 function mapBuild(raw: RawBuild): Build {
-  const heroImageUrl = toImageUrl(raw.heroImage);
-  const galleryImageUrls = (raw.gallery ?? [])
-    .map((img) => toImageUrl(img))
-    .filter((url): url is string => Boolean(url));
+  const defaultAlt = defaultBuildImageAlt();
+  const heroImage = toBuildImage(raw.heroImage, defaultAlt);
+  const galleryImages = (raw.gallery ?? [])
+    .map((img) => toBuildImage(img, defaultAlt))
+    .filter((image): image is BuildImage => Boolean(image));
 
-  const assemblyVideoPosterUrl = toImageUrl(raw.assemblyVideoPoster);
-  const gameplayVideoPosterUrl = toImageUrl(raw.gameplayVideoPoster);
+  const assemblyVideoPoster = toBuildImage(
+    raw.assemblyVideoPoster,
+    ASSEMBLY_VIDEO_POSTER_FALLBACK_ALT,
+  );
+  const gameplayVideoPoster = toBuildImage(
+    raw.gameplayVideoPoster,
+    GAMEPLAY_VIDEO_POSTER_FALLBACK_ALT,
+  );
   const gpuLabel = [raw.gpuDoc?.brand, raw.gpuDoc?.model].filter(Boolean).join(" ").trim();
 
   return {
@@ -438,13 +472,13 @@ function mapBuild(raw: RawBuild): Build {
     includedBenefits: mapBenefits(raw.includedBenefits),
     customFaqItems: mapCustomFaq(raw.customFaq),
     reviews: mapReviews(raw.reviews, raw.slug as Build["slug"]),
-    heroImageUrl,
-    galleryImageUrls: galleryImageUrls.length > 0 ? galleryImageUrls : undefined,
+    heroImage,
+    galleryImages: galleryImages.length > 0 ? galleryImages : undefined,
     assemblyVideoUrl: raw.assemblyVideoUrl,
-    assemblyVideoPosterUrl,
+    assemblyVideoPoster,
     assemblyVideoUploadDate: normalizeSanityDatetime(raw.assemblyVideoUploadDate),
     gameplayVideoUrl: raw.gameplayVideoUrl,
-    gameplayVideoPosterUrl,
+    gameplayVideoPoster,
     gameplayVideoUploadDate: normalizeSanityDatetime(raw.gameplayVideoUploadDate),
     configurableOptions: makeConfigGroups(raw),
     seo: raw.seo ?? null,
