@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
+import { Check } from "lucide-react";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import {
@@ -50,10 +50,11 @@ function labelOf<T extends { value: string; label: string }>(
 }
 
 export function CustomBuildForm() {
-  const router = useRouter();
   const budgetLabelId = useId();
   const [budgetRange, setBudgetRange] = useState<[number, number]>([40, 80]);
-  const [submitError, setSubmitError] = useState(false);
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "success" | "error">(
+    "idle",
+  );
 
   const {
     register,
@@ -78,7 +79,7 @@ export function CustomBuildForm() {
   const channel = watch("channel");
 
   async function onSubmit(values: CustomBuildValues) {
-    setSubmitError(false);
+    setSubmitStatus("idle");
 
     const orderNumber = `UA-CB-${new Date().toISOString().slice(2, 10).replace(/-/g, "")}-${Math.floor(Math.random() * 9000 + 1000)}`;
 
@@ -97,12 +98,26 @@ export function CustomBuildForm() {
 
     try {
       await sendTelegramMessage(text);
-      router.push(
-        `/oformlennya/uspikh?order=${orderNumber}&payment=iban_individual`,
-      );
+      setSubmitStatus("success");
     } catch {
-      setSubmitError(true);
+      setSubmitStatus("error");
     }
+  }
+
+  if (submitStatus === "success") {
+    return (
+      <div className="flex flex-col items-center rounded-lg border border-border bg-surface px-6 py-12 text-center md:py-16">
+        <div className="mb-5 flex size-16 items-center justify-center rounded-full bg-brand-primary/15">
+          <Check className="size-8 text-brand-primary" strokeWidth={3} />
+        </div>
+        <h2 className="font-display text-2xl font-bold md:text-3xl">
+          ДЯКУЄМО ЗА ЗВЕРНЕННЯ!
+        </h2>
+        <p className="mt-3 max-w-md text-muted-foreground">
+          Ми вже отримали вашу заявку. Скоро наш менеджер звʼяжеться з вами.
+        </p>
+      </div>
+    );
   }
 
   return (
@@ -285,7 +300,7 @@ export function CustomBuildForm() {
         </div>
       </div>
 
-      {submitError && (
+      {submitStatus === "error" && (
         <p className="text-center text-sm text-destructive">
           Не вдалося надіслати заявку. Спробуй ще раз або напиши нам у Telegram.
         </p>
