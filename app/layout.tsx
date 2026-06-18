@@ -51,18 +51,14 @@ export const metadata: Metadata = {
     locale: "uk_UA",
     siteName: "Kondor PC",
   },
-  // Pre-launch: hard-block all crawlers. Flip together with robots.ts when
-  // we go live. See app/robots.ts for the launch checklist.
   robots: {
-    index: false,
-    follow: false,
-    nocache: true,
+    index: true,
+    follow: true,
     googleBot: {
-      index: false,
-      follow: false,
-      noimageindex: true,
+      index: true,
+      follow: true,
       "max-video-preview": -1,
-      "max-image-preview": "none",
+      "max-image-preview": "large",
       "max-snippet": -1,
     },
   },
