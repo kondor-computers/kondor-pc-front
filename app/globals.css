@@ -1,0 +1,971 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant light (&:is(.light *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --font-body: var(--font-body);
+  --font-display: var(--font-display);
+  --font-heading: var(--font-heading);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-surface: var(--surface);
+  --color-surface-elevated: var(--surface-elevated);
+
+  --color-fps-green: var(--fps-green);
+  --color-fps-yellow: var(--fps-yellow);
+  --color-fps-orange: var(--fps-orange);
+  --color-fps-red: var(--fps-red);
+
+  --color-sku: var(--sku);
+  --color-black: var(--black);
+  --color-white: var(--white);
+  --color-brand-primary: var(--brand-primary);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/*
+ * Kondor PC — dark-first tokens (temporary; align with brandbook when received).
+ * Per-SKU accents live as --sku-* and can be pushed into --sku at component scope.
+ */
+:root {
+  --background: #07090e;
+  --foreground: #f0f2f5;
+
+  --surface: #0f1217;
+  --surface-elevated: #171b21;
+
+  --card: var(--surface);
+  --card-foreground: var(--foreground);
+
+  --popover: var(--surface-elevated);
+  --popover-foreground: var(--foreground);
+
+  --primary: #f0f2f5;
+  --primary-foreground: #07090e;
+
+  --black: #000000;
+  --white: #ffffff;
+  --brand-primary: #20deff;
+
+  --secondary: #21242a;
+  --secondary-foreground: var(--foreground);
+
+  --muted: #1d1f24;
+  --muted-foreground: #8b939d;
+
+  --accent: #252930;
+  --accent-foreground: var(--foreground);
+
+  --destructive: #ff5251;
+
+  --border: #ffffff14;
+  --input: #ffffff0f;
+  --ring: #b0b8c5;
+
+  --radius: 0.5rem;
+
+  /* FPS indicators (TZ §6.2.3: 144+/60-143/30-59/<30) */
+  --fps-green: #47e684;
+  --fps-yellow: #fcca21;
+  --fps-orange: #ff8928;
+  --fps-red: #ff4b57;
+
+  /* Per-SKU accents — derived from IG RGB lighting of each chassis */
+  --sku-vega: #b795ff; /* violet */
+  --sku-hyper: #ff5d69; /* red */
+  --sku-nebula: #ffc921; /* amber */
+  --sku-orbitra: #13d97f; /* emerald */
+  --sku-nyx: #ff5680; /* rose */
+  --sku-velar: #ce8dff; /* plum */
+  --sku-pulsar: #47b0ff; /* blue */
+  --sku-comet: #d6dfec; /* soft white */
+
+  /* Default SKU slot — overridden via style=--sku:... on card scope */
+  --sku: var(--sku-vega);
+
+  /* Sidebar tokens kept for shadcn compatibility */
+  --sidebar: var(--surface);
+  --sidebar-foreground: var(--foreground);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--foreground);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    color-scheme: dark;
+    @apply font-body antialiased;
+    font-feature-settings: "ss01", "cv11";
+    background-color: var(--background);
+    /*
+     * Reserve the scrollbar gutter even when content doesn't overflow.
+     * This keeps the viewport width stable when <body> flips to overflow:hidden
+     * (e.g. while the cart drawer is open), eliminating the horizontal jump
+     * that would otherwise happen as the native scrollbar disappears.
+     */
+    scrollbar-gutter: stable;
+    scrollbar-width: thin;
+    scrollbar-color: #383b40 transparent;
+  }
+
+  /* Dark scrollbar — WebKit / Chromium. Matches the dark-first surface tokens. */
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  *::-webkit-scrollbar-thumb {
+    background-color: #303339;
+    border: 2px solid transparent;
+    border-radius: 999px;
+    background-clip: padding-box;
+    transition: background-color 150ms ease;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: #4e535b;
+    background-clip: padding-box;
+  }
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
+  /*
+   * Global atmospheric background — two viewport-fixed layers behind all content.
+   * ::before  — soft ambient dome at the top of the viewport (subtle violet tint)
+   * ::after   — persistent tech grid with radial vignette
+   * Both are GPU-composited, pointer-events: none, and ignored by print/reduced-motion.
+   */
+  body {
+    @apply text-foreground min-h-screen;
+    background-color: transparent;
+    position: relative;
+    isolation: isolate;
+  }
+
+  body::before,
+  body::after {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+  }
+
+  body::before {
+    z-index: -2;
+    background:
+      radial-gradient(ellipse 110% 55% at 50% -4%, #272d6066, transparent 60%),
+      radial-gradient(ellipse 70% 50% at 100% 100%, #0f27502e, transparent 60%);
+  }
+
+  body::after {
+    z-index: -1;
+    background-image:
+      linear-gradient(to right, #ffffff07 1px, transparent 1px),
+      linear-gradient(to bottom, #ffffff07 1px, transparent 1px);
+    background-size: 64px 64px;
+    mask-image: radial-gradient(
+      ellipse 115% 85% at 50% 25%,
+      black 25%,
+      transparent 85%
+    );
+    -webkit-mask-image: radial-gradient(
+      ellipse 115% 85% at 50% 25%,
+      black 25%,
+      transparent 85%
+    );
+  }
+
+  @media print {
+    body::before,
+    body::after {
+      display: none;
+    }
+  }
+
+  /* Tabular numerics for specs, prices, FPS */
+  .tabular,
+  .tabular * {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+
+  ::selection {
+    background: #ffffff26;
+  }
+
+  /* Pointer cursor for every interactive control — native buttons default to default cursor. */
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]),
+  summary,
+  label[for] {
+    cursor: pointer;
+  }
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
+
+@layer components {
+  /*
+   * Site-wide layout rails. Every top-level page section or header/footer
+   * should use one of these — never hand-rolled max-w-* + px-* combos.
+   *
+   * Horizontal padding scale: 16/24/32 (sm 640, lg 1024). Matches Tailwind's
+   * default .container rhythm so left/right edges align across breakpoints.
+   */
+  .container-site {
+    @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
+  }
+  .container-prose {
+    @apply mx-auto w-full max-w-3xl px-4 sm:px-6 lg:px-8;
+  }
+  .container-narrow {
+    @apply mx-auto w-full max-w-2xl px-4 sm:px-6 lg:px-8;
+  }
+}
+
+/*
+ * ZenterSP has no Ukrainian glyphs (і, ї, є, ґ). Restrict it to Latin via
+ * unicode-range so Cyrillic falls through to Unbounded automatically.
+ */
+@font-face {
+  font-family: "ZenterSP";
+  src: url("/fonts/ZenterSPDemo.woff2") format("woff2");
+  font-display: swap;
+  unicode-range: U+0000-024F;
+}
+
+@layer utilities {
+  .font-display {
+    font-family:
+      "ZenterSP", var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
+
+  .font-wide {
+    font-family:
+      "ZenterSP", var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+    letter-spacing: 0.06em;
+  }
+
+  /* Narrower scrollbar for compact filter lists (e.g. PK catalog games). */
+  .scrollbar-thin-sidebar {
+    scrollbar-width: thin;
+    scrollbar-color: #383b40 transparent;
+  }
+  .scrollbar-thin-sidebar::-webkit-scrollbar {
+    width: 3px;
+  }
+  .scrollbar-thin-sidebar::-webkit-scrollbar-thumb {
+    border-width: 0;
+  }
+
+  /*
+   * Subtle accent glow used on SKU cards.
+   * Uses `filter: drop-shadow(...)` rather than `box-shadow` so it follows
+   * `clip-path` geometry — angular cards cast angular shadows, not
+   * rectangular ones clipped at the corners.
+   */
+  .sku-glow {
+    filter: drop-shadow(
+        0 0 0.5px color-mix(in srgb, var(--sku) 45%, transparent)
+      )
+      drop-shadow(
+        0 24px 40px
+          color-mix(in srgb, var(--sku) 28.000000000000004%, transparent)
+      );
+    transition: filter 700ms cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  .sku-glow:hover {
+    filter: drop-shadow(
+        0 0 0.7px color-mix(in srgb, var(--sku) 70%, transparent)
+      )
+      drop-shadow(0 30px 60px color-mix(in srgb, var(--sku) 50%, transparent));
+  }
+
+  /*
+   * Global "bevelled" clip-path utilities — cuts at top-left + bottom-right,
+   * matching the TechButton geometry. Apply to buttons, cards, containers.
+   */
+  .clip-angular-xs {
+    clip-path: polygon(
+      4px 0%,
+      100% 0%,
+      100% calc(100% - 4px),
+      calc(100% - 4px) 100%,
+      0% 100%,
+      0% 4px
+    );
+  }
+  .clip-angular-sm {
+    clip-path: polygon(
+      6px 0%,
+      100% 0%,
+      100% calc(100% - 6px),
+      calc(100% - 6px) 100%,
+      0% 100%,
+      0% 6px
+    );
+  }
+  .clip-angular-12 {
+    clip-path: polygon(
+      12px 0%,
+      100% 0%,
+      100% calc(100% - 12px),
+      calc(100% - 12px) 100%,
+      0% 100%,
+      0% 12px
+    );
+  }
+  .clip-angular-md {
+    clip-path: polygon(
+      20px 0%,
+      100% 0%,
+      100% calc(100% - 20px),
+      calc(100% - 20px) 100%,
+      0% 100%,
+      0% 20px
+    );
+  }
+  .clip-angular-lg {
+    clip-path: polygon(
+      28px 0%,
+      100% 0%,
+      100% calc(100% - 28px),
+      calc(100% - 28px) 100%,
+      0% 100%,
+      0% 28px
+    );
+  }
+
+  /*
+   * Card frame — polygonal card with a visible 1px border that FOLLOWS the
+   * diagonal cuts (not just the straight edges). The outer element is filled
+   * with the edge color and clipped to the polygon; ::before renders the
+   * fill color, inset by 1px. The ::before inherits the outer's clip-path so
+   * the cuts stay parallel.
+   */
+  .card-frame-sm,
+  .card-frame-md,
+  .card-frame-lg {
+    position: relative;
+    isolation: isolate;
+    --card-inset: 1px;
+    background: var(--card-edge, #ffffff1a);
+    /*
+     * Both axes transition. Without the `transform` entry, the card's
+     * `-translate-y-1` hover lift snaps instantly (0ms) because the bg-only
+     * shorthand resets transition on every other property.
+     */
+    transition:
+      transform 300ms cubic-bezier(0.22, 1, 0.36, 1),
+      background-color 300ms ease-out,
+      box-shadow 300ms ease-out;
+    will-change: transform;
+  }
+  .card-frame-sm {
+    --cut: 10px;
+    clip-path: polygon(
+      var(--cut) 0%,
+      100% 0%,
+      100% calc(100% - var(--cut)),
+      calc(100% - var(--cut)) 100%,
+      0% 100%,
+      0% var(--cut)
+    );
+  }
+  .card-frame-md {
+    --cut: 20px;
+    clip-path: polygon(
+      var(--cut) 0%,
+      100% 0%,
+      100% calc(100% - var(--cut)),
+      calc(100% - var(--cut)) 100%,
+      0% 100%,
+      0% var(--cut)
+    );
+  }
+  .card-frame-lg {
+    --cut: 28px;
+    clip-path: polygon(
+      var(--cut) 0%,
+      100% 0%,
+      100% calc(100% - var(--cut)),
+      calc(100% - var(--cut)) 100%,
+      0% 100%,
+      0% var(--cut)
+    );
+  }
+  .card-frame-sm::before,
+  .card-frame-md::before,
+  .card-frame-lg::before {
+    content: "";
+    position: absolute;
+    inset: var(--card-inset);
+    background: var(--card-fill, var(--surface));
+    clip-path: inherit;
+    z-index: -1;
+    transition:
+      inset 300ms ease-out,
+      background-color 300ms ease-out;
+  }
+  .card-frame-md:hover,
+  .card-frame-lg:hover {
+    --card-inset: 2px;
+    transform: translateY(-0.25rem);
+    --card-edge: color-mix(in srgb, var(--primary) 52%, transparent);
+    box-shadow: inset 0 0 0 1px
+      color-mix(in srgb, var(--primary) 28.000000000000004%, transparent);
+  }
+
+  /* Hero card — cyan gradient on top edge only, lift-only hover */
+  .build-hero-card {
+    position: relative;
+    isolation: isolate;
+    --cut: 20px;
+    clip-path: polygon(
+      var(--cut) 0%,
+      100% 0%,
+      100% calc(100% - var(--cut)),
+      calc(100% - var(--cut)) 100%,
+      0% 100%,
+      0% var(--cut)
+    );
+    background: var(--card-fill, var(--surface));
+    box-shadow: 0px 0px 0px 1px rgba(255, 255, 255, 0.05) inset;
+    transition: transform 300ms ease-out;
+  }
+  .build-hero-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      rgba(19, 188, 217, 0) 0%,
+      rgba(19, 158, 217, 0.9) 50%,
+      rgba(19, 217, 211, 0) 100%
+    );
+    pointer-events: none;
+    z-index: 2;
+  }
+  .build-hero-card:hover {
+    transform: translateY(-0.25rem);
+  }
+
+  /*
+   * Generic smooth hover wrapper — applies to any card-like element that lifts
+   * or scales on hover. Longer duration + softer easing = premium, not snappy.
+   */
+  .smooth-hover {
+    transition:
+      transform 700ms cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 400ms ease-out,
+      background-color 400ms ease-out,
+      color 250ms ease-out;
+    will-change: transform;
+  }
+
+  /* Tech grid background — used in hero zones only */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, #ffffff0a 1px, transparent 1px),
+      linear-gradient(to bottom, #ffffff0a 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(
+      ellipse 85% 70% at 50% 0%,
+      black 0%,
+      transparent 85%
+    );
+    -webkit-mask-image: radial-gradient(
+      ellipse 85% 70% at 50% 0%,
+      black 0%,
+      transparent 85%
+    );
+  }
+  .bg-grid-dense {
+    background-image:
+      linear-gradient(to right, #ffffff0d 1px, transparent 1px),
+      linear-gradient(to bottom, #ffffff0d 1px, transparent 1px);
+    background-size: 32px 32px;
+    mask-image: radial-gradient(
+      ellipse 80% 70% at 30% 30%,
+      black 0%,
+      transparent 75%
+    );
+    -webkit-mask-image: radial-gradient(
+      ellipse 80% 70% at 30% 30%,
+      black 0%,
+      transparent 75%
+    );
+  }
+
+  /* Pointer-follow spotlight for SKU cards. Activates when --mx/--my are set. */
+  .card-spotlight {
+    background: radial-gradient(
+      260px circle at var(--mx, 50%) var(--my, 50%),
+      color-mix(in srgb, var(--sku) 22%, transparent),
+      transparent 50%
+    );
+    opacity: 0;
+    transition: opacity 350ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .group:hover .card-spotlight {
+    opacity: 1;
+  }
+
+  /*
+   * FPS green-tier dot: slow breathing pulse.
+   * Animates only transform + opacity (GPU-composited) — no box-shadow, which
+   * would force per-frame paints on the main thread (non-composited animation).
+   */
+  @keyframes fps-pulse {
+    0%,
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.18);
+      opacity: 0.72;
+    }
+  }
+  .animate-fps-pulse {
+    animation: fps-pulse 2.8s ease-in-out infinite;
+    will-change: transform, opacity;
+  }
+
+  /* Reveal on scroll — paired with IntersectionObserver in Reveal.tsx */
+  .reveal-init {
+    opacity: 0;
+    transform: translateY(16px);
+    transition:
+      opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+      transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+    will-change: opacity, transform;
+  }
+  .reveal-show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  /* When JavaScript is disabled the IntersectionObserver never runs, so the
+     content would stay at opacity: 0. Force it visible for no-JS clients and
+     crawlers that do not execute scripts. */
+  @media (scripting: none) {
+    .reveal-init {
+      opacity: 1;
+      transform: none;
+      transition: none;
+    }
+  }
+
+  /* Subtle top shimmer line on SKU cards */
+  .sku-top-line {
+    background: linear-gradient(
+      90deg,
+      transparent 0%,
+      color-mix(in srgb, var(--sku) 90%, transparent) 50%,
+      transparent 100%
+    );
+  }
+}
+
+/*
+ * Component-level classes live in `@layer components` so Tailwind utilities
+ * (like `.hidden`, `.inline-flex`, responsive variants) always override their
+ * defaults at equal specificity.
+ */
+@layer components {
+  .tech-btn {
+    --tech-cut: 12px;
+    --tech-border: 1.5px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    font-size: 12px;
+    background: transparent;
+    isolation: isolate;
+    transition: color 300ms ease-out;
+  }
+  /*
+   * `min-height` (rather than `height`) ensures flex children with
+   * `flex: 1 1 0%` — e.g. the `flex-1` CTAs in PurchaseActions inside a
+   * flex-col parent — still get the intended tap-target height.
+   */
+  .tech-btn[data-size="sm"] {
+    min-height: 1rem;
+    padding-inline: 0.5rem;
+    --tech-cut: 8px;
+  }
+  .tech-btn[data-size="md"] {
+    min-height: 1rem;
+    padding-inline: 1.75rem;
+  }
+  .tech-btn[data-size="lg"] {
+    min-height: 2.5rem;
+    padding-inline: 2rem;
+    --tech-cut: 12px;
+  }
+  @media (min-width: 1024px) {
+    .tech-btn[data-size="sm"] {
+      font-size: 0.72rem;
+    }
+    .tech-btn[data-size="md"] {
+      font-size: 0.78rem;
+    }
+    .tech-btn[data-size="lg"] {
+      font-size: 0.9rem;
+    }
+  }
+
+  .tech-btn__edge,
+  .tech-btn__fill {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    clip-path: polygon(
+      var(--tech-cut) 0%,
+      100% 0%,
+      100% calc(100% - var(--tech-cut)),
+      calc(100% - var(--tech-cut)) 100%,
+      0% 100%,
+      0% var(--tech-cut)
+    );
+    transition: background-color 300ms ease-out;
+  }
+  .tech-btn__edge {
+    z-index: -2;
+  }
+  .tech-btn__fill {
+    inset: var(--tech-border);
+    z-index: -1;
+  }
+
+  /* primary — cyan fill / black text → hover black fill / cyan text */
+  .tech-btn[data-variant="primary"] {
+    color: var(--black);
+  }
+  .tech-btn[data-variant="primary"] .tech-btn__edge {
+    background-color: var(--tech-accent, var(--brand-primary));
+  }
+  .tech-btn[data-variant="primary"] .tech-btn__fill {
+    background-color: var(--brand-primary);
+  }
+  .tech-btn[data-variant="primary"]:not(:disabled):hover {
+    color: var(--brand-primary);
+  }
+  .tech-btn[data-variant="primary"]:not(:disabled):hover .tech-btn__fill {
+    background-color: var(--black);
+  }
+
+  /* inverse — primary default ↔ hover swapped */
+  .tech-btn[data-variant="inverse"] {
+    color: var(--brand-primary);
+  }
+  .tech-btn[data-variant="inverse"] .tech-btn__edge {
+    background-color: var(--tech-accent, var(--brand-primary));
+  }
+  .tech-btn[data-variant="inverse"] .tech-btn__fill {
+    background-color: var(--black);
+  }
+  .tech-btn[data-variant="inverse"]:not(:disabled):hover {
+    color: var(--black);
+  }
+  .tech-btn[data-variant="inverse"]:not(:disabled):hover .tech-btn__fill {
+    background-color: var(--brand-primary);
+  }
+
+  /* swap — black fill / cyan text → hover cyan fill / black text */
+  .tech-btn[data-variant="swap"] {
+    color: var(--brand-primary);
+  }
+  .tech-btn[data-variant="swap"] .tech-btn__edge {
+    background-color: var(--black);
+  }
+  .tech-btn[data-variant="swap"] .tech-btn__fill {
+    background-color: var(--black);
+  }
+  .tech-btn[data-variant="swap"]:not(:disabled):hover {
+    color: var(--black);
+  }
+  .tech-btn[data-variant="swap"]:not(:disabled):hover .tech-btn__edge,
+  .tech-btn[data-variant="swap"]:not(:disabled):hover .tech-btn__fill {
+    background-color: var(--brand-primary);
+  }
+
+  /* white — white fill / black text → hover black fill / white text */
+  .tech-btn[data-variant="white"] {
+    color: var(--black);
+  }
+  .tech-btn[data-variant="white"] .tech-btn__edge {
+    background-color: var(--tech-accent, var(--white));
+  }
+  .tech-btn[data-variant="white"] .tech-btn__fill {
+    background-color: var(--white);
+  }
+  .tech-btn[data-variant="white"]:not(:disabled):hover {
+    color: var(--white);
+  }
+  .tech-btn[data-variant="white"]:not(:disabled):hover .tech-btn__fill {
+    background-color: var(--black);
+  }
+  .tech-btn[data-variant="white"]:focus-visible {
+    outline-color: var(--white);
+  }
+
+  /* muted — #ffffff59 outline on black → hover solid white */
+  .tech-btn[data-variant="muted"] {
+    color: #ffffff59;
+  }
+  .tech-btn[data-variant="muted"] .tech-btn__edge {
+    background-color: #ffffff59;
+  }
+  .tech-btn[data-variant="muted"] .tech-btn__fill {
+    background-color: var(--black);
+  }
+  .tech-btn[data-variant="muted"]:not(:disabled):hover {
+    color: var(--black);
+  }
+  .tech-btn[data-variant="muted"]:not(:disabled):hover .tech-btn__edge,
+  .tech-btn[data-variant="muted"]:not(:disabled):hover .tech-btn__fill {
+    background-color: var(--white);
+  }
+  .tech-btn[data-variant="muted"]:focus-visible {
+    outline-color: #ffffff59;
+  }
+
+  .tech-btn:not(:disabled):active {
+    transform: scale(0.985);
+    transition: transform 80ms ease-out;
+  }
+
+  .tech-btn:focus-visible {
+    outline: 2px solid var(--tech-accent, var(--brand-primary));
+    outline-offset: 3px;
+  }
+
+  .tech-btn:disabled {
+    cursor: not-allowed;
+    color: #717171;
+  }
+  .tech-btn:disabled .tech-btn__edge {
+    background-color: #2e2e2e;
+  }
+  .tech-btn:disabled .tech-btn__fill {
+    background-color: #1d1f24;
+  }
+
+  /* Header bar — .card-frame-md technique: gradient = 1px edge, inner layer covers center */
+  .header-bar {
+    position: relative;
+    width: 100%;
+  }
+  .header-bar__edge,
+  .header-bar__fill {
+    display: none;
+  }
+  @media (min-width: 1280px) {
+    .header-bar {
+      isolation: isolate;
+      --header-cut: 12px;
+      --header-border: 1px;
+      clip-path: polygon(
+        var(--header-cut) 0%,
+        100% 0%,
+        100% calc(100% - var(--header-cut)),
+        calc(100% - var(--header-cut)) 100%,
+        0% 100%,
+        0% var(--header-cut)
+      );
+    }
+    .header-bar__edge,
+    .header-bar__fill {
+      display: block;
+      position: absolute;
+      pointer-events: none;
+      clip-path: polygon(
+        var(--header-cut) 0%,
+        100% 0%,
+        100% calc(100% - var(--header-cut)),
+        calc(100% - var(--header-cut)) 100%,
+        0% 100%,
+        0% var(--header-cut)
+      );
+    }
+    .header-bar__edge {
+      inset: 0;
+      background: linear-gradient(90deg, #183b42 0%, #09b5ff 100%);
+      z-index: -2;
+    }
+    .header-bar__fill {
+      inset: var(--header-border);
+      background: color-mix(in srgb, var(--background) 83%, transparent);
+      z-index: -1;
+    }
+  }
+
+  /* Budget chips — chamfer mask + white fill (hero / CTA budget links) */
+  .budget-chip {
+    --tech-cut: 6px;
+    --tech-border: 1px;
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 26px;
+    padding-inline: 0.875rem;
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+    color: var(--black);
+    background: transparent;
+    isolation: isolate;
+    transition:
+      color 300ms ease-out,
+      transform 300ms ease-out;
+  }
+  .budget-chip__edge,
+  .budget-chip__fill {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    clip-path: polygon(
+      var(--tech-cut) 0%,
+      100% 0%,
+      100% calc(100% - var(--tech-cut)),
+      calc(100% - var(--tech-cut)) 100%,
+      0% 100%,
+      0% var(--tech-cut)
+    );
+    transition: background-color 300ms ease-out;
+  }
+  .budget-chip__edge {
+    background-color: var(--white);
+    z-index: -2;
+  }
+  .budget-chip__fill {
+    inset: var(--tech-border);
+    background-color: var(--white);
+    z-index: -1;
+  }
+  .budget-chip:hover {
+    color: var(--black);
+    transform: translateY(-2px);
+  }
+  .budget-chip:active {
+    transform: translateY(0) scale(0.985);
+  }
+  .budget-chip:focus-visible {
+    outline: 2px solid var(--brand-primary);
+    outline-offset: 3px;
+  }
+
+  /*
+   * TechField — same clipped-corner treatment for form surfaces
+   * (selects, inputs). Neutral border by default, highlights on focus.
+   */
+  .tech-field {
+    --tech-accent: #ffffff2e;
+    --tech-cut: 8px;
+    --tech-border: 1px;
+    --tech-fill: var(--surface);
+    position: relative;
+    display: flex;
+    align-items: center;
+    isolation: isolate;
+    transition: --tech-accent 200ms ease-out;
+  }
+  .tech-field::before,
+  .tech-field::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    clip-path: polygon(
+      var(--tech-cut) 0%,
+      100% 0%,
+      100% calc(100% - var(--tech-cut)),
+      calc(100% - var(--tech-cut)) 100%,
+      0% 100%,
+      0% var(--tech-cut)
+    );
+    transition: background-color 200ms ease-out;
+  }
+  .tech-field::before {
+    background-color: var(--tech-accent);
+    z-index: -2;
+  }
+  .tech-field::after {
+    inset: var(--tech-border);
+    background-color: var(--tech-fill);
+    z-index: -1;
+  }
+  .tech-field:hover::before {
+    background-color: #ffffff4d;
+  }
+  .tech-field:focus-within::before {
+    background-color: var(--ring);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal-init,
+  .reveal-show {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .animate-fps-pulse {
+    animation: none !important;
+  }
+  .sku-glow,
+  .sku-glow:hover,
+  .build-hero-card,
+  .build-hero-card:hover {
+    transition: none !important;
+  }
+}
