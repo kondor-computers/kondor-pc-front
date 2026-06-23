@@ -594,7 +594,7 @@ export default async function BuildPage({
                 className="lg:max-w-[706px] lg:mx-auto"
               />
               <div className="lg:max-w-[706px] lg:mx-auto">
-                <FaqBlock items={faqs} />
+                <FaqBlock items={faqs} toggleVariant="onAccent" />
               </div>
             </div>
           </section>

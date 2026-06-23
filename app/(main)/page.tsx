@@ -492,7 +492,7 @@ export default async function HomePage() {
               </div>
             </div>
 
-            <FaqBlock items={homeFaqs} />
+            <FaqBlock items={homeFaqs} toggleVariant="onAccent" />
           </Reveal>
         </div>
       </section>

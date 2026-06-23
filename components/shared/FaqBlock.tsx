@@ -17,7 +17,21 @@ const URL_TEST_RE = /^https?:\/\/[^\s]+$/;
 const FAQ_ANSWER_TEXT_CLASS =
   "text-[12px] lg:text-[14px] leading-[120%] text-black";
 
-function resolveLink(url: string): { href: string; label: string; external: boolean } {
+const TOGGLE_BUTTON_BASE =
+  "mx-auto rounded-lg px-6 py-3 text-[12px] lg:text-[14px] font-medium transition-all duration-200";
+
+const TOGGLE_BUTTON_CLASS = {
+  default: `${TOGGLE_BUTTON_BASE} border border-border bg-white text-black hover:border-foreground/25 hover:bg-zinc-100 hover:shadow-sm`,
+  onAccent: `${TOGGLE_BUTTON_BASE}  bg-white text-black shadow-[0_2px_10px_rgba(0,0,0,0.12)] hover:-translate-y-px hover:border-black hover:bg-black hover:text-brand-primary hover:shadow-[0_8px_24px_rgba(0,0,0,0.35)] active:translate-y-0`,
+} as const;
+
+export type FaqToggleVariant = keyof typeof TOGGLE_BUTTON_CLASS;
+
+function resolveLink(url: string): {
+  href: string;
+  label: string;
+  external: boolean;
+} {
   const tg = url.match(/^https?:\/\/t\.me\/(.+)$/);
   if (tg) return { href: url, label: `@${tg[1]}`, external: true };
 
@@ -59,11 +73,7 @@ function FaqAnswerContent({ nodes }: { nodes: ContentNode[] }) {
       {nodes.map((node, i) => {
         switch (node.type) {
           case "p":
-            return (
-              <p key={i}>
-                {node.children.map(renderFaqInline)}
-              </p>
-            );
+            return <p key={i}>{node.children.map(renderFaqInline)}</p>;
           case "list": {
             const Tag = node.ordered ? "ol" : "ul";
             return (
@@ -135,7 +145,9 @@ function FaqRow({ f }: { f: Faq }) {
           {f.question}
         </span>
       </AccordionTrigger>
-      <AccordionContent className={`p-5 mt-0.5 ${FAQ_ANSWER_TEXT_CLASS} bg-white rounded-[8px]`}>
+      <AccordionContent
+        className={`p-5 mt-0.5 ${FAQ_ANSWER_TEXT_CLASS} bg-white rounded-[8px]`}
+      >
         {hasRichAnswer ? (
           <FaqAnswerContent nodes={f.answerContent!} />
         ) : (
@@ -150,10 +162,12 @@ export function FaqBlock({
   items,
   className,
   collapseAfter = 4,
+  toggleVariant = "default",
 }: {
   items: Faq[];
   className?: string;
   collapseAfter?: number;
+  toggleVariant?: FaqToggleVariant;
 }) {
   const [expanded, setExpanded] = useState(false);
 
@@ -195,7 +209,7 @@ export function FaqBlock({
         <button
           type="button"
           onClick={() => setExpanded((v) => !v)}
-          className="mx-auto rounded-lg border border-border bg-white px-6 py-3 text-[12px] lg:text-[14px] font-medium text-black transition-colors hover:bg-black/5"
+          className={TOGGLE_BUTTON_CLASS[toggleVariant]}
         >
           {expanded ? "Показати менше" : "Показати більше"}
         </button>
