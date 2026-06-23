@@ -106,7 +106,13 @@ export default async function HomePage() {
     <>
       <DeferredSitePageSchema
         pageId="seoHomePage"
-        excludeTypes={["Organization", "OnlineStore", "WebSite", "FAQPage", "WebPage"]}
+        excludeTypes={[
+          "Organization",
+          "OnlineStore",
+          "WebSite",
+          "FAQPage",
+          "WebPage",
+        ]}
       />
       <SiteWebPageJsonLd pageId="seoHomePage" />
       {homeFaqSchema ? <JsonLd data={homeFaqSchema} /> : null}
@@ -224,6 +230,7 @@ export default async function HomePage() {
               title="ЯК ЗНАЙТИ СВІЙ ПК ЗА 30 СЕКУНД"
               titleClassName="text-black"
               kickerClassName="text-black mb-3"
+              showKickerDot={false}
             />
           </Reveal>
           <Reveal delay={80}>
@@ -460,7 +467,7 @@ export default async function HomePage() {
             <SectionHeader
               align="center"
               kicker="Готовий?"
-              title="Обери свій ПК"
+              title="ОБЕРИ СВІЙ ПК"
               subtitle="Підбір за 30 секунд або обирай за бюджетом. Доставка Новою Поштою."
               kickerClassName="text-black"
               titleClassName="text-black py-4"
