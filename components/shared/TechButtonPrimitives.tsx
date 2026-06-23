@@ -6,7 +6,7 @@ type Size = "sm" | "md" | "lg";
 
 /** primary — cyan fill / black text → hover black fill / cyan text (border stays cyan) */
 /** inverse — default and hover swapped vs primary */
-/** swap — black fill / cyan text → hover cyan fill / black text (edge swaps too) */
+/** swap — black fill / cyan text → hover cyan fill / black text, black 2px edge */
 /** white — white fill / black text → hover black fill / white text (border stays white) */
 /** muted — black fill / semi-transparent white text & border → hover white fill / black text */
 export type TechButtonVariant =

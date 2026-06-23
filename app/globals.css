@@ -719,8 +719,9 @@
     background-color: var(--brand-primary);
   }
 
-  /* swap — black fill / cyan text → hover cyan fill / black text */
+  /* swap — black fill / cyan text → hover cyan fill / black text, black 2px edge */
   .tech-btn[data-variant="swap"] {
+    --tech-border: 2px;
     color: var(--brand-primary);
   }
   .tech-btn[data-variant="swap"] .tech-btn__edge {
@@ -732,7 +733,9 @@
   .tech-btn[data-variant="swap"]:not(:disabled):hover {
     color: var(--black);
   }
-  .tech-btn[data-variant="swap"]:not(:disabled):hover .tech-btn__edge,
+  .tech-btn[data-variant="swap"]:not(:disabled):hover .tech-btn__edge {
+    background-color: var(--black);
+  }
   .tech-btn[data-variant="swap"]:not(:disabled):hover .tech-btn__fill {
     background-color: var(--brand-primary);
   }
