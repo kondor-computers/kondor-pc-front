@@ -96,7 +96,7 @@ function FaqAnswerContent({ nodes }: { nodes: ContentNode[] }) {
                   href={node.href}
                   size="sm"
                   variant="primary"
-                  className="h-[36px] px-5 text-[12px] lg:text-[14px] !no-underline hover:!no-underline"
+                  className="min-h-[36px] h-auto max-w-full px-5 py-2 text-center text-[12px] whitespace-normal lg:text-[14px] !no-underline hover:!no-underline"
                   target={node.newTab ? "_blank" : undefined}
                   rel={node.newTab ? "noopener noreferrer" : undefined}
                 >
