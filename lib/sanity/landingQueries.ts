@@ -108,6 +108,16 @@ export const LANDING_PAGE_BY_SLUG = groq`
         "discountAccessories": discountAccessories{kind, value}
       },
       "button": button{text, href}
+    },
+
+    // tableSection — @sanity/table (same shape as blog portable text table)
+    _type=="tableSection" => {
+      anchor, heading,
+      "table": table{
+        rows[]{
+          cells[]
+        }
+      }
     }
   }
 }`;

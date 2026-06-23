@@ -32,8 +32,17 @@ import {
   howToAssemblyJsonLd,
   pcBuildVideoObjectJsonLd,
 } from "@/lib/seo";
-import { getAllBuilds, getBuildBySlug, getBuildSlugs, pickSimilarBuilds } from "@/lib/sanity-pc/builds";
-import { getAllGames, makeGameLabelMap, makeGameShortLabelMap } from "@/lib/sanity-pc/games";
+import {
+  getAllBuilds,
+  getBuildBySlug,
+  getBuildSlugs,
+  pickSimilarBuilds,
+} from "@/lib/sanity-pc/builds";
+import {
+  getAllGames,
+  makeGameLabelMap,
+  makeGameShortLabelMap,
+} from "@/lib/sanity-pc/games";
 import { getAddonItems } from "@/lib/sanity/fetchers";
 import { groupProducts } from "@/lib/catalog/group";
 import { cn } from "@/lib/utils";
@@ -196,7 +205,9 @@ export default async function BuildPage({
   const galleryImages = resolveBuildGalleryImages(build);
   const heroImage = galleryImages[0];
   const defaultAlt = defaultBuildImageAlt();
-  const heroAlt = heroImage ? resolveImageAlt(heroImage, defaultAlt) : defaultAlt;
+  const heroAlt = heroImage
+    ? resolveImageAlt(heroImage, defaultAlt)
+    : defaultAlt;
   const needsInteractiveGallery =
     galleryImages.length > 1 || Boolean(build.assemblyVideoUrl);
   const faqSchema = faqPageJsonLd(faqs);
@@ -211,7 +222,13 @@ export default async function BuildPage({
         <Suspense fallback={null}>
           <SchemaJsonFromSeo
             seo={build.seo}
-            excludeTypes={["Product", "BreadcrumbList", "FAQPage", "HowTo", "VideoObject"]}
+            excludeTypes={[
+              "Product",
+              "BreadcrumbList",
+              "FAQPage",
+              "HowTo",
+              "VideoObject",
+            ]}
           />
         </Suspense>
         <JsonLd
@@ -475,112 +492,112 @@ export default async function BuildPage({
         )}
 
         {faqs.length > 0 ? (
-        <section className="relative rounded-[40px] overflow-hidden">
-          <div className="absolute -z-40 inset-0 bg-brand-primary rounded-[40px]" />
-          <div className="relative container-site pt-[233px] lg:py-[66px] pb-[122px]">
-            <div className="lg:hidden absolute -z-20 top-[-125px] left-[calc(50%-460px)] w-[630px] h-[487px]">
-              <Image
-                src="/images/home/faq/top-decor-mob.webp"
-                alt="top-decor-mob"
-                width="630"
-                height="487"
-                className="object-cover"
+          <section className="relative rounded-[40px] overflow-hidden">
+            <div className="absolute -z-40 inset-0 bg-brand-primary rounded-[40px]" />
+            <div className="relative container-site pt-[233px] lg:py-[66px] pb-[122px]">
+              <div className="lg:hidden absolute -z-20 top-[-125px] left-[calc(50%-460px)] w-[630px] h-[487px]">
+                <Image
+                  src="/images/home/faq/top-decor-mob.webp"
+                  alt="top-decor-mob"
+                  width="630"
+                  height="487"
+                  className="object-cover"
+                />
+              </div>
+              <div className="lg:hidden absolute -z-10 top-[-520px] left-[calc(50%-710px)] w-[1175px] h-[1153px]">
+                <Image
+                  src="/images/home/faq/top-shadows-mob.svg"
+                  alt="top-shadows-mob"
+                  width="1175"
+                  height="1153"
+                  className="object-cover"
+                />
+              </div>
+              <div className="lg:hidden absolute -z-10 bottom-[-345px] left-[calc(50%-340px)] w-[748px] h-[549px]">
+                <Image
+                  src="/images/home/faq/bottom-decor-mob.webp"
+                  alt="bottom-decor-mob"
+                  width="748"
+                  height="549"
+                  className="object-cover"
+                />
+              </div>
+              <div className="lg:hidden absolute -z-20 bottom-[-265px] left-[calc(50%-467px)] w-[975px] h-[975px]">
+                <Image
+                  src="/images/home/faq/bottom-shadows-mob.svg"
+                  alt="bottom-shadows-mob"
+                  width="975"
+                  height="975"
+                  className="object-cover"
+                />
+              </div>
+              <div className="hidden lg:block absolute -z-20 top-[22px] left-[calc(50%-1440px)] w-[1231px] h-[767px]">
+                <Image
+                  src="/images/home/faq/left-decor-desk.webp"
+                  alt="left-decor-desk"
+                  width="1231"
+                  height="767"
+                  className="object-cover"
+                />
+              </div>
+              <div className="hidden lg:block absolute -z-20 top-[-69px] right-[calc(50%-1000px)] w-[1160px] h-[852px]">
+                <Image
+                  src="/images/home/faq/right-decor-desk.webp"
+                  alt="right-decor-desk"
+                  width="1160"
+                  height="852"
+                  className="object-cover"
+                />
+              </div>
+              <div className="hidden lg:block absolute -z-10 top-[0px] left-[calc(50%-502px)] w-[1004px] h-[695px]">
+                <Image
+                  src="/images/home/faq/center-shadows-desk.svg"
+                  alt="center-decor-desk"
+                  width="1004"
+                  height="695"
+                  className="object-cover"
+                />
+              </div>
+              <div className="hidden lg:block absolute -z-10 top-[-453px] left-[calc(50%-1480px)] w-[1056px] h-[1021px]">
+                <Image
+                  src="/images/home/faq/top-left-shadows-desk.svg"
+                  alt="top-left-shadows-desk"
+                  width="1056"
+                  height="1021"
+                  className="object-cover"
+                />
+              </div>
+              <div className="hidden lg:block absolute -z-10 bottom-[-462px] left-[calc(50%-1377px)] w-[975px] h-[975px]">
+                <Image
+                  src="/images/home/faq/bottom-left-shadows-desk.svg"
+                  alt="bottom-left-shadows-desk"
+                  width="975"
+                  height="975"
+                  className="object-cover"
+                />
+              </div>
+              <div className="hidden lg:block absolute -z-10 bottom-[-404px] right-[calc(50%-1277px)] w-[735px] h-[735px]">
+                <Image
+                  src="/images/home/faq/bottom-right-shadows-desk.svg"
+                  alt="bottom-right-shadows-desk"
+                  width="735"
+                  height="735"
+                  className="object-cover"
+                />
+              </div>
+              <SectionHeader
+                kicker="ЧАСТІ ПИТАННЯ"
+                title={`Про ${build.name}`}
+                kickerClassName="text-center text-black"
+                titleClassName="mt-3 lg:mt-7 text-center text-black"
+                showKickerDot={false}
+                className="lg:max-w-[706px] lg:mx-auto"
               />
+              <div className="lg:max-w-[706px] lg:mx-auto">
+                <FaqBlock items={faqs} />
+              </div>
             </div>
-            <div className="lg:hidden absolute -z-10 top-[-520px] left-[calc(50%-710px)] w-[1175px] h-[1153px]">
-              <Image
-                src="/images/home/faq/top-shadows-mob.svg"
-                alt="top-shadows-mob"
-                width="1175"
-                height="1153"
-                className="object-cover"
-              />
-            </div>
-            <div className="lg:hidden absolute -z-10 bottom-[-345px] left-[calc(50%-340px)] w-[748px] h-[549px]">
-              <Image
-                src="/images/home/faq/bottom-decor-mob.webp"
-                alt="bottom-decor-mob"
-                width="748"
-                height="549"
-                className="object-cover"
-              />
-            </div>
-            <div className="lg:hidden absolute -z-20 bottom-[-265px] left-[calc(50%-467px)] w-[975px] h-[975px]">
-              <Image
-                src="/images/home/faq/bottom-shadows-mob.svg"
-                alt="bottom-shadows-mob"
-                width="975"
-                height="975"
-                className="object-cover"
-              />
-            </div>
-            <div className="hidden lg:block absolute -z-20 top-[22px] left-[calc(50%-1440px)] w-[1231px] h-[767px]">
-              <Image
-                src="/images/home/faq/left-decor-desk.webp"
-                alt="left-decor-desk"
-                width="1231"
-                height="767"
-                className="object-cover"
-              />
-            </div>
-            <div className="hidden lg:block absolute -z-20 top-[-69px] right-[calc(50%-1000px)] w-[1160px] h-[852px]">
-              <Image
-                src="/images/home/faq/right-decor-desk.webp"
-                alt="right-decor-desk"
-                width="1160"
-                height="852"
-                className="object-cover"
-              />
-            </div>
-            <div className="hidden lg:block absolute -z-10 top-[0px] left-[calc(50%-502px)] w-[1004px] h-[695px]">
-              <Image
-                src="/images/home/faq/center-shadows-desk.svg"
-                alt="center-decor-desk"
-                width="1004"
-                height="695"
-                className="object-cover"
-              />
-            </div>
-            <div className="hidden lg:block absolute -z-10 top-[-453px] left-[calc(50%-1480px)] w-[1056px] h-[1021px]">
-              <Image
-                src="/images/home/faq/top-left-shadows-desk.svg"
-                alt="top-left-shadows-desk"
-                width="1056"
-                height="1021"
-                className="object-cover"
-              />
-            </div>
-            <div className="hidden lg:block absolute -z-10 bottom-[-462px] left-[calc(50%-1377px)] w-[975px] h-[975px]">
-              <Image
-                src="/images/home/faq/bottom-left-shadows-desk.svg"
-                alt="bottom-left-shadows-desk"
-                width="975"
-                height="975"
-                className="object-cover"
-              />
-            </div>
-            <div className="hidden lg:block absolute -z-10 bottom-[-404px] right-[calc(50%-1277px)] w-[735px] h-[735px]">
-              <Image
-                src="/images/home/faq/bottom-right-shadows-desk.svg"
-                alt="bottom-right-shadows-desk"
-                width="735"
-                height="735"
-                className="object-cover"
-              />
-            </div>
-            <SectionHeader
-              kicker="Часті питання"
-              title={`Про ${build.name}`}
-              kickerClassName="text-center text-black"
-              titleClassName="mt-3 lg:mt-7 text-center text-black"
-              showKickerDot={false}
-              className="lg:max-w-[706px] lg:mx-auto"
-            />
-            <div className="lg:max-w-[706px] lg:mx-auto">
-              <FaqBlock items={faqs} />
-            </div>
-          </div>
-        </section>
+          </section>
         ) : null}
 
         {similarBuilds.length > 0 ? (

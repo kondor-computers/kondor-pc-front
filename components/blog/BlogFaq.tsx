@@ -20,7 +20,7 @@ export default function BlogFaq({ items, uniqueKey }: BlogFaqProps) {
   return (
     <section className="py-12 md:py-16">
       <h2 className="mb-6 font-display text-[22px] font-bold uppercase leading-[120%] text-foreground lg:text-[32px]">
-        Часті питання
+        ЧАСТІ ПИТАННЯ
       </h2>
 
       <FaqBlock items={faqItems} />

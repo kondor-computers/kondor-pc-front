@@ -154,6 +154,13 @@ function normalizeSection(s: any): Section {
         button: s.button,
       };
 
+    case "tableSection":
+      return {
+        ...base,
+        heading: s.heading,
+        rows: s.table?.rows ?? [],
+      };
+
     default:
       // Unknown section — pass through raw. The BLOCKS registry will skip
       // it with a console.warn in dev.

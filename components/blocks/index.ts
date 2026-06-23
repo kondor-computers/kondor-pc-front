@@ -19,6 +19,7 @@ import { ImageFull } from "./ImageFull";
 import { FeatureList } from "./FeatureList";
 import { BuildsRow } from "./BuildsRow";
 import { MediaVideo } from "./MediaVideo";
+import { TableSection } from "./TableSection";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const BLOCKS: Record<string, ComponentType<any>> = {
@@ -43,6 +44,7 @@ export const BLOCKS: Record<string, ComponentType<any>> = {
   featureList: FeatureList,
   buildsRow: BuildsRow,
   mediaVideo: MediaVideo,
+  tableSection: TableSection,
 };
 
 export {
@@ -66,4 +68,5 @@ export {
   FeatureList,
   BuildsRow,
   MediaVideo,
+  TableSection,
 };
