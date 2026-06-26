@@ -79,6 +79,14 @@ export interface ConfigOption {
   addonSelectionMode?: "additive" | "single";
   /** Опція вже в базовій комплектації — без доплати, не знімається. */
   isIncluded?: boolean;
+  /** GPU-варіант: VRAM для spec panel. */
+  gpuVram?: string;
+  /** RAM-варіант: швидкість (МГц) для spec panel. */
+  ramSpeed?: string;
+  /** GPU-варіант: FPS з урахуванням fpsCoefficient. */
+  fps?: BuildFpsEntry[];
+  /** GPU-варіант: множник FPS для цієї збірки. */
+  fpsCoefficient?: number;
 }
 
 export interface ConfigGroup {
@@ -87,8 +95,8 @@ export interface ConfigGroup {
   label: string;
   /** Lucide icon name (e.g. "memory-stick", "hard-drive", "shield"). */
   icon?: string;
-  /** Overrides one of `build.spec` fields when selected — e.g. "ram" rewrites spec.ram. */
-  overridesSpec?: "ram" | "storage";
+  /** Overrides one of `build.spec` fields when selected. */
+  overridesSpec?: "cpu" | "gpu" | "ram" | "storage";
   /** `single` — один варіант (RAM, SSD, радіо по категорії addon). `multiple` — чекбокси. */
   selectionMode?: ConfigGroupSelectionMode;
   options: ConfigOption[];

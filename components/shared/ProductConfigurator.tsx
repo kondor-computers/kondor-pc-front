@@ -16,7 +16,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatUah } from "@/lib/format";
-import type { Build, BuildSpecShort, ConfigGroup, ConfigOption } from "@/types/build";
+import type { Build, BuildFpsEntry, BuildSpecShort, ConfigGroup, ConfigOption } from "@/types/build";
 import type { CartItemOption } from "@/lib/cartStore";
 
 export interface ConfiguratorSelection {
@@ -44,6 +44,8 @@ export interface ConfiguratorValue {
   deltaUah: number;
   /** Spec panel values reflecting picked options (ram/storage overrides). */
   resolvedSpec: BuildSpecShort;
+  /** FPS для обраної GPU (або базової за замовчуванням). */
+  resolvedFps: BuildFpsEntry[];
   /** Rich list of picked options for display and cart. */
   selectedOptions: Array<{
     groupId: string;
@@ -316,15 +318,24 @@ export function ProductConfiguratorProvider({
       if (!group.overridesSpec) continue;
       const picked = selectedOptions.find((s) => s.groupId === group.id);
       if (!picked) continue;
-      if (group.overridesSpec === "ram") {
+      if (group.overridesSpec === "cpu") {
+        resolvedSpec.cpu = picked.option.label;
+      } else if (group.overridesSpec === "gpu") {
+        resolvedSpec.gpu = picked.option.label;
+        resolvedSpec.gpuVram = picked.option.gpuVram;
+      } else if (group.overridesSpec === "ram") {
         resolvedSpec.ram = picked.option.label;
         resolvedSpec.ramSpeed =
+          picked.option.ramSpeed ??
           picked.option.description?.match(/(\d{3,5})\s*MHz/i)?.[1] ??
           build.spec.ramSpeed;
       } else if (group.overridesSpec === "storage") {
         resolvedSpec.storage = picked.option.label;
       }
     }
+
+    const gpuPick = selectedOptions.find((s) => s.groupId === "gpu");
+    const resolvedFps = gpuPick?.option.fps ?? build.fps;
 
     const cartOptions: CartItemOption[] = selectedOptions.map(
       ({ groupId, groupLabel, option }) => ({
@@ -384,6 +395,7 @@ export function ProductConfiguratorProvider({
       resolvedOldPriceUah,
       deltaUah,
       resolvedSpec,
+      resolvedFps,
       selectedOptions,
       cartOptions,
     };

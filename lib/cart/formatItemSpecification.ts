@@ -1,8 +1,14 @@
 import type { CartItem } from "@/lib/cartStore";
 import type { BuildSpecShort } from "@/types/build";
 
-/** Групи опцій, які вже відображаються в `spec` (mock: ssd, Sanity: storage). */
-const SPEC_COVERED_OPTION_GROUPS = new Set(["ram", "ssd", "storage"]);
+/** Групи опцій, які вже відображаються в `spec`. */
+const SPEC_COVERED_OPTION_GROUPS = new Set([
+  "cpu",
+  "gpu",
+  "ram",
+  "ssd",
+  "storage",
+]);
 
 function formatGpuLine(spec: BuildSpecShort): string {
   if (!spec.gpuVram) return spec.gpu;
