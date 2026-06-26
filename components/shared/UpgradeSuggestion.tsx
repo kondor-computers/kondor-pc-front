@@ -31,6 +31,9 @@ export function UpgradeSuggestion({ className }: { className?: string }) {
     };
     const candidates: Candidate[] = [];
     for (const group of groups) {
+      if (group.selectionMode === "multiple" || group.id.startsWith("addon")) {
+        continue;
+      }
       const picked = selections[group.id];
       const pickedOpt = group.options.find((o) => o.id === picked);
       const pickedDelta = pickedOpt?.priceDelta ?? 0;

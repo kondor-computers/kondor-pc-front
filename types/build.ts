@@ -53,6 +53,16 @@ export interface BuildFpsEntry {
   notes?: string;
 }
 
+export type BuildAddonCategory =
+  | "network"
+  | "power"
+  | "cooling"
+  | "software"
+  | "accessories"
+  | "other";
+
+export type ConfigGroupSelectionMode = "single" | "multiple";
+
 export interface ConfigOption {
   /** Stable slug — key for selection state and cart identity. */
   id: string;
@@ -61,18 +71,37 @@ export interface ConfigOption {
   /** ₴ delta relative to base price. Can be 0 or negative. */
   priceDelta: number;
   isDefault?: boolean;
+  /** CRM-ключ з Sanity `buildAddon.key` (додаткові опції). */
+  addonKey?: string;
+  /** Категорія addon — для взаємовиключного вибору в межах групи. */
+  addonCategory?: BuildAddonCategory;
+  /** `single` — лише одна опція з категорії; `additive` — незалежний чекбокс. */
+  addonSelectionMode?: "additive" | "single";
+  /** Опція вже в базовій комплектації — без доплати, не знімається. */
+  isIncluded?: boolean;
 }
 
 export interface ConfigGroup {
-  /** "ram" | "ssd" | "warranty" | ... — stable slug. */
+  /** "ram" | "ssd" | "warranty" | "addons" | "addon-cat-power" | ... */
   id: string;
   label: string;
   /** Lucide icon name (e.g. "memory-stick", "hard-drive", "shield"). */
   icon?: string;
   /** Overrides one of `build.spec` fields when selected — e.g. "ram" rewrites spec.ram. */
   overridesSpec?: "ram" | "storage";
+  /** `single` — один варіант (RAM, SSD, радіо по категорії addon). `multiple` — чекбокси. */
+  selectionMode?: ConfigGroupSelectionMode;
   options: ConfigOption[];
 }
+
+export const BUILD_ADDON_CATEGORY_LABELS: Record<BuildAddonCategory, string> = {
+  network: "Мережа",
+  power: "Живлення",
+  cooling: "Охолодження",
+  software: "ОС та софт",
+  accessories: "Аксесуари",
+  other: "Додатково",
+};
 
 export interface BuildImage {
   url: string;

@@ -47,7 +47,10 @@ export function BuildRepeatCta() {
           {nonDefaultPicks.length > 0 && (
             <ul className="tabular mt-4 space-y-1 text-sm text-muted-foreground">
               {nonDefaultPicks.map(({ groupId, groupLabel, option }) => (
-                <li key={groupId} className="flex items-center gap-2">
+                <li
+                  key={`${groupId}:${option.id}`}
+                  className="flex items-center gap-2"
+                >
                   <span className="text-[color:var(--sku)]">✓</span>
                   <span>{groupLabel}:</span>
                   <span className="text-foreground">{option.label}</span>

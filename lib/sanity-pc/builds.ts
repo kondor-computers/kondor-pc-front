@@ -1,5 +1,6 @@
 import type {
   Build,
+  BuildAddonCategory,
   BuildBenefit,
   BuildFpsEntry,
   BuildImage,
@@ -63,6 +64,24 @@ type RawBuildBenefit = {
   description?: string;
 };
 
+type RawBuildAddonDoc = {
+  key?: string;
+  title?: string;
+  description?: string;
+  priceUah?: number;
+  category?: string;
+  selectionMode?: string;
+  sortOrder?: number;
+  isActive?: boolean;
+};
+
+type RawAvailableAddon = {
+  priceOverride?: number;
+  isIncluded?: boolean;
+  sortOrder?: number;
+  addon?: RawBuildAddonDoc | null;
+};
+
 type RawBuild = {
   slug: string;
   sku?: string;
@@ -104,6 +123,7 @@ type RawBuild = {
   ramOptions?: RawConfigOption[];
   ssdOptions?: RawConfigOption[];
   warrantyOptions?: RawConfigOption[];
+  availableAddons?: RawAvailableAddon[];
   reviews?: RawReviewRow[];
   seo?: PageSeo | null;
 };
@@ -168,6 +188,21 @@ const BUILDS_QUERY = `
   "ramOptions": coalesce(ramOptions, []),
   "ssdOptions": coalesce(ssdOptions, []),
   "warrantyOptions": coalesce(warrantyOptions, []),
+  "availableAddons": coalesce(availableAddons[]{
+    priceOverride,
+    isIncluded,
+    sortOrder,
+    "addon": addon->{
+      key,
+      title,
+      description,
+      priceUah,
+      category,
+      selectionMode,
+      sortOrder,
+      isActive
+    }
+  }, []),
   "reviews": coalesce(reviews, []),
   "seo": seo${SEO_SETTINGS_PROJECTION}
 }
@@ -205,6 +240,100 @@ function mapConfigOptions(options: RawConfigOption[], prefix: string): ConfigOpt
     }));
 }
 
+function mapAddonCategory(value?: string): BuildAddonCategory {
+  if (
+    value === "network" ||
+    value === "power" ||
+    value === "cooling" ||
+    value === "software" ||
+    value === "accessories" ||
+    value === "other"
+  ) {
+    return value;
+  }
+  return "other";
+}
+
+type ResolvedBuildAddon = {
+  key: string;
+  title: string;
+  description?: string;
+  priceDelta: number;
+  category: BuildAddonCategory;
+  selectionMode: "additive" | "single";
+  sortOrder: number;
+  isIncluded: boolean;
+};
+
+function resolveBuildAddons(rows?: RawAvailableAddon[]): ResolvedBuildAddon[] {
+  if (!rows?.length) return [];
+
+  const resolved: ResolvedBuildAddon[] = [];
+  for (const row of rows) {
+    const doc = row.addon;
+    if (!doc || doc.isActive === false) continue;
+    const key = doc.key?.trim();
+    const title = doc.title?.trim();
+    if (!key || !title) continue;
+
+    const isIncluded = Boolean(row.isIncluded);
+    const priceDelta = isIncluded
+      ? 0
+      : typeof row.priceOverride === "number"
+        ? row.priceOverride
+        : typeof doc.priceUah === "number"
+          ? doc.priceUah
+          : 0;
+
+    const sortOrder =
+      typeof row.sortOrder === "number"
+        ? row.sortOrder
+        : typeof doc.sortOrder === "number"
+          ? doc.sortOrder
+          : 999;
+
+    resolved.push({
+      key,
+      title,
+      description: doc.description?.trim() || undefined,
+      priceDelta,
+      category: mapAddonCategory(doc.category),
+      selectionMode: doc.selectionMode === "single" ? "single" : "additive",
+      sortOrder,
+      isIncluded,
+    });
+  }
+
+  return resolved.sort((a, b) => a.sortOrder - b.sortOrder || a.title.localeCompare(b.title, "uk"));
+}
+
+function mapAddonToOption(addon: ResolvedBuildAddon): ConfigOption {
+  return {
+    id: addon.key,
+    addonKey: addon.key,
+    addonCategory: addon.category,
+    addonSelectionMode: addon.selectionMode,
+    label: addon.title,
+    description: addon.description,
+    priceDelta: addon.priceDelta,
+    isIncluded: addon.isIncluded,
+    isDefault: addon.isIncluded,
+  };
+}
+
+function makeAddonConfigGroups(addons: ResolvedBuildAddon[]): ConfigGroup[] {
+  if (addons.length === 0) return [];
+
+  return [
+    {
+      id: "addons",
+      label: "Додаткові опції",
+      selectionMode: "multiple",
+      options: addons.map(mapAddonToOption),
+    },
+  ];
+}
+
 function makeConfigGroups(raw: RawBuild): ConfigGroup[] | undefined {
   const groups: ConfigGroup[] = [];
 
@@ -239,6 +368,8 @@ function makeConfigGroups(raw: RawBuild): ConfigGroup[] | undefined {
       options: warranty,
     });
   }
+
+  groups.push(...makeAddonConfigGroups(resolveBuildAddons(raw.availableAddons)));
 
   return groups.length > 0 ? groups : undefined;
 }

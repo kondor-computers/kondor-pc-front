@@ -33,6 +33,11 @@ export function getCartItemSpecificationLines(item: CartItem): string[] {
     if (item.spec && SPEC_COVERED_OPTION_GROUPS.has(option.groupId)) {
       return;
     }
+    // У групі «Додаткові опції» кожна опція — окремий рядок з назвою.
+    if (option.groupId === "addons") {
+      lines.push(option.optionLabel);
+      return;
+    }
     lines.push(`${option.groupLabel}: ${option.optionLabel}`);
   });
 

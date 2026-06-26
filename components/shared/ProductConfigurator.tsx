@@ -16,7 +16,7 @@ import {
 import { useRouter, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { formatUah } from "@/lib/format";
-import type { Build, BuildSpecShort, ConfigOption } from "@/types/build";
+import type { Build, BuildSpecShort, ConfigGroup, ConfigOption } from "@/types/build";
 import type { CartItemOption } from "@/lib/cartStore";
 
 export interface ConfiguratorSelection {
@@ -30,6 +30,8 @@ export interface ConfiguratorValue {
   build: Build;
   selections: Record<string, string>;
   select(groupId: string, optionId: string): void;
+  /** Toggle option in a `selectionMode: "multiple"` group (checkbox addons). */
+  toggleMulti(groupId: string, optionId: string): void;
   /** Bulk-apply a preset across all configurable groups. */
   applyPreset(preset: Exclude<ConfiguratorPreset, "custom">): void;
   /** Which preset the current selections match ("custom" = none). */
@@ -56,9 +58,38 @@ const ProductConfiguratorContext = createContext<ConfiguratorValue | null>(
   null,
 );
 
+function isMultipleGroup(group: ConfigGroup): boolean {
+  return group.selectionMode === "multiple";
+}
+
+function isPresetGroup(group: ConfigGroup): boolean {
+  return !isMultipleGroup(group) && !group.id.startsWith("addon");
+}
+
+function parseMultiSelection(value: string | undefined): string[] {
+  if (!value) return [];
+  return value.split(",").map((id) => id.trim()).filter(Boolean);
+}
+
+function formatMultiSelection(ids: string[]): string {
+  return [...ids].sort().join(",");
+}
+
+function defaultMultiSelection(group: ConfigGroup): string[] {
+  const included = group.options.filter((o) => o.isIncluded).map((o) => o.id);
+  if (included.length > 0) return included;
+  const defaults = group.options.filter((o) => o.isDefault).map((o) => o.id);
+  if (defaults.length > 0) return defaults;
+  return [];
+}
+
 function defaultSelections(build: Build): Record<string, string> {
   const map: Record<string, string> = {};
   for (const group of build.configurableOptions ?? []) {
+    if (isMultipleGroup(group)) {
+      map[group.id] = formatMultiSelection(defaultMultiSelection(group));
+      continue;
+    }
     const def = group.options.find((o) => o.isDefault) ?? group.options[0];
     if (def) map[group.id] = def.id;
   }
@@ -79,6 +110,14 @@ function selectionsFromUrl(
   for (const group of build.configurableOptions ?? []) {
     const raw = searchParams.get(group.id);
     if (!raw) continue;
+    if (isMultipleGroup(group)) {
+      const valid = parseMultiSelection(raw).filter((id) =>
+        group.options.some((o) => o.id === id),
+      );
+      const locked = group.options.filter((o) => o.isIncluded).map((o) => o.id);
+      map[group.id] = formatMultiSelection([...new Set([...locked, ...valid])]);
+      continue;
+    }
     if (group.options.some((o) => o.id === raw)) map[group.id] = raw;
   }
   return map;
@@ -134,6 +173,11 @@ export function ProductConfiguratorProvider({
     for (const group of build.configurableOptions ?? []) {
       const picked = selections[group.id];
       const def = defaults[group.id];
+      if (isMultipleGroup(group)) {
+        if (picked && picked !== def) sp.set(group.id, picked);
+        else sp.delete(group.id);
+        continue;
+      }
       if (picked && picked !== def) sp.set(group.id, picked);
       else sp.delete(group.id);
     }
@@ -150,36 +194,81 @@ export function ProductConfiguratorProvider({
     setSelections((prev) => ({ ...prev, [groupId]: optionId }));
   }, []);
 
+  const toggleMulti = useCallback(
+    (groupId: string, optionId: string) => {
+      const group = build.configurableOptions?.find((g) => g.id === groupId);
+      if (!group || !isMultipleGroup(group)) return;
+      const option = group.options.find((o) => o.id === optionId);
+      if (!option || option.isIncluded) return;
+
+      setSelections((prev) => {
+        const current = parseMultiSelection(prev[groupId]);
+        const locked = group.options.filter((o) => o.isIncluded).map((o) => o.id);
+        const isSelected = current.includes(optionId);
+
+        let next: string[];
+        if (isSelected) {
+          next = current.filter((id) => id !== optionId);
+        } else {
+          next = [...current, optionId];
+          if (
+            option.addonSelectionMode === "single" &&
+            option.addonCategory
+          ) {
+            const exclusiveIds = new Set(
+              group.options
+                .filter(
+                  (o) =>
+                    o.addonCategory === option.addonCategory &&
+                    o.id !== optionId,
+                )
+                .map((o) => o.id),
+            );
+            next = next.filter((id) => !exclusiveIds.has(id));
+          }
+        }
+
+        return {
+          ...prev,
+          [groupId]: formatMultiSelection([...new Set([...locked, ...next])]),
+        };
+      });
+    },
+    [build.configurableOptions],
+  );
+
   /** Bulk-apply a preset (Basic / Optimal / Premium). */
   const applyPreset = useCallback(
     (preset: "base" | "optimal" | "premium") => {
-      const next: Record<string, string> = {};
-      for (const group of build.configurableOptions ?? []) {
-        const opts = group.options;
-        if (opts.length === 0) continue;
-        if (preset === "base") {
-          const def = opts.find((o) => o.isDefault) ?? opts[0];
-          next[group.id] = def.id;
-        } else if (preset === "premium") {
-          const top = [...opts].sort((a, b) => b.priceDelta - a.priceDelta)[0];
-          next[group.id] = top.id;
-        } else {
-          // optimal: cheapest non-default upgrade in each group; fall back to default.
-          const def = opts.find((o) => o.isDefault) ?? opts[0];
-          const upgrades = opts.filter(
-            (o) => o.id !== def.id && o.priceDelta > 0,
-          );
-          if (upgrades.length === 0) {
+      setSelections((prev) => {
+        const next = { ...prev };
+        for (const group of build.configurableOptions ?? []) {
+          if (!isPresetGroup(group)) continue;
+          const opts = group.options;
+          if (opts.length === 0) continue;
+          if (preset === "base") {
+            const def = opts.find((o) => o.isDefault) ?? opts[0];
             next[group.id] = def.id;
+          } else if (preset === "premium") {
+            const top = [...opts].sort((a, b) => b.priceDelta - a.priceDelta)[0];
+            next[group.id] = top.id;
           } else {
-            const cheapest = [...upgrades].sort(
-              (a, b) => a.priceDelta - b.priceDelta,
-            )[0];
-            next[group.id] = cheapest.id;
+            const def = opts.find((o) => o.isDefault) ?? opts[0];
+            const upgrades = opts.filter(
+              (o) => o.id !== def.id && o.priceDelta > 0,
+            );
+            if (upgrades.length === 0) {
+              next[group.id] = def.id;
+            } else {
+              const cheapest = [...upgrades].sort(
+                (a, b) => a.priceDelta - b.priceDelta,
+              )[0];
+              next[group.id] = cheapest.id;
+            }
           }
         }
-      }
-      setSelections(next);
+        return next;
+      });
     },
     [build.configurableOptions],
   );
@@ -187,19 +276,31 @@ export function ProductConfiguratorProvider({
   const value = useMemo<ConfiguratorValue>(() => {
     const groups = build.configurableOptions ?? [];
 
-    const selectedOptions = groups
-      .map((group) => {
-        const optionId = selections[group.id];
-        const option = group.options.find((o) => o.id === optionId);
-        if (!option) return null;
-        return { groupId: group.id, groupLabel: group.label, option };
-      })
-      .filter(
-        (
-          x,
-        ): x is { groupId: string; groupLabel: string; option: ConfigOption } =>
-          x !== null,
-      );
+    const selectedOptions = groups.flatMap((group) => {
+      if (isMultipleGroup(group)) {
+        const pickedIds = parseMultiSelection(selections[group.id]);
+        return pickedIds
+          .map((optionId) => {
+            const option = group.options.find((o) => o.id === optionId);
+            if (!option) return null;
+            return { groupId: group.id, groupLabel: group.label, option };
+          })
+          .filter(
+            (
+              x,
+            ): x is {
+              groupId: string;
+              groupLabel: string;
+              option: ConfigOption;
+            } => x !== null,
+          );
+      }
+
+      const optionId = selections[group.id];
+      const option = group.options.find((o) => o.id === optionId);
+      if (!option) return [];
+      return [{ groupId: group.id, groupLabel: group.label, option }];
+    });
 
     const deltaUah = selectedOptions.reduce(
       (s, { option }) => s + option.priceDelta,
@@ -229,7 +330,7 @@ export function ProductConfiguratorProvider({
       ({ groupId, groupLabel, option }) => ({
         groupId,
         groupLabel,
-        optionId: option.id,
+        optionId: option.addonKey ?? option.id,
         optionLabel: option.label,
         priceDelta: option.priceDelta,
       }),
@@ -238,6 +339,7 @@ export function ProductConfiguratorProvider({
     // Derive which preset (if any) the current selections match.
     const matches = (preset: "base" | "optimal" | "premium") => {
       for (const group of groups) {
+        if (!isPresetGroup(group)) continue;
         const opts = group.options;
         if (opts.length === 0) continue;
         const picked = selections[group.id];
@@ -275,6 +377,7 @@ export function ProductConfiguratorProvider({
       build,
       selections,
       select: setGroup,
+      toggleMulti,
       applyPreset,
       currentPreset,
       resolvedPriceUah,
@@ -284,7 +387,7 @@ export function ProductConfiguratorProvider({
       selectedOptions,
       cartOptions,
     };
-  }, [build, selections, setGroup, applyPreset]);
+  }, [build, selections, setGroup, toggleMulti, applyPreset]);
 
   return (
     <ProductConfiguratorContext.Provider value={value}>
@@ -314,25 +417,13 @@ export function useProductConfiguratorOptional(): ConfiguratorValue | null {
 //  UI
 // ──────────────────────────────────────────────────────────────
 
-const PRESETS: Array<{
-  key: Exclude<ConfiguratorPreset, "custom">;
-  label: string;
-  note: string;
-}> = [
-  { key: "base", label: "Базова", note: "Як у картці · без доплат" },
-  { key: "optimal", label: "Оптимальна", note: "Найвигідніший апгрейд" },
-  { key: "premium", label: "Преміум", note: "Максимум з доступних опцій" },
-];
-
 export function Configurator({ className }: { className?: string }) {
   const {
     build,
     selections,
     select,
+    toggleMulti,
     deltaUah,
-    resolvedPriceUah,
-    applyPreset,
-    currentPreset,
   } = useProductConfigurator();
   const groups = build.configurableOptions ?? [];
   if (groups.length === 0) return null;
@@ -369,6 +460,78 @@ export function Configurator({ className }: { className?: string }) {
       </div>
 
       {groups.map((group) => {
+        if (isMultipleGroup(group)) {
+          const picked = new Set(parseMultiSelection(selections[group.id]));
+          return (
+            <div key={group.id}>
+              <div className="mb-1.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                {group.label}
+              </div>
+              <div className="space-y-1.5">
+                {group.options.map((opt) => {
+                  const active = picked.has(opt.id);
+                  const locked = Boolean(opt.isIncluded);
+                  return (
+                    <button
+                      key={opt.id}
+                      type="button"
+                      disabled={locked}
+                      aria-pressed={active}
+                      onClick={() => toggleMulti(group.id, opt.id)}
+                      className={cn(
+                        "flex w-full items-start gap-2.5 rounded-md border px-2.5 py-2 text-left text-sm transition",
+                        active
+                          ? "border-foreground bg-surface-elevated"
+                          : "border-border hover:border-white/25",
+                        locked && "cursor-default opacity-90",
+                      )}
+                    >
+                      <span
+                        aria-hidden
+                        className={cn(
+                          "mt-0.5 flex size-3.5 shrink-0 items-center justify-center rounded border",
+                          active
+                            ? "border-foreground bg-foreground text-background"
+                            : "border-muted-foreground/50",
+                        )}
+                      >
+                        {active && (
+                          <svg
+                            viewBox="0 0 12 12"
+                            className="size-2.5"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                          >
+                            <path d="M2 6l3 3 5-6" />
+                          </svg>
+                        )}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="font-medium">{opt.label}</span>
+                        {opt.description && (
+                          <span className="mt-0.5 block text-[11px] text-muted-foreground">
+                            {opt.description}
+                          </span>
+                        )}
+                      </span>
+                      {locked ? (
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          включено
+                        </span>
+                      ) : opt.priceDelta > 0 ? (
+                        <span className="shrink-0 text-[11px] text-muted-foreground">
+                          +{formatUah(opt.priceDelta)} ₴
+                        </span>
+                      ) : null}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        }
+
         const activeId = selections[group.id];
         return (
           <div key={group.id}>
@@ -396,7 +559,11 @@ export function Configurator({ className }: { className?: string }) {
                     )}
                   >
                     <span className="font-medium">{opt.label}</span>
-                    {opt.priceDelta !== 0 && (
+                    {opt.isIncluded ? (
+                      <span className="ml-2 text-[11px] text-muted-foreground">
+                        включено
+                      </span>
+                    ) : opt.priceDelta !== 0 ? (
                       <span
                         className={cn(
                           "ml-2 text-[11px]",
@@ -407,11 +574,16 @@ export function Configurator({ className }: { className?: string }) {
                         {isPositive && "+"}
                         {formatUah(opt.priceDelta)} ₴
                       </span>
-                    )}
+                    ) : null}
                   </button>
                 );
               })}
             </div>
+            {group.options.some((o) => o.description) && (
+              <div className="mt-1 text-[11px] text-muted-foreground">
+                {group.options.find((o) => o.id === activeId)?.description}
+              </div>
+            )}
           </div>
         );
       })}

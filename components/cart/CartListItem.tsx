@@ -111,7 +111,7 @@ export function CartListItem({
           {item.options && item.options.length > 0 && (
             <ul className="mt-1 space-y-0.5 text-[11px] text-muted-foreground">
               {item.options.map((o) => (
-                <li key={o.groupId}>
+                <li key={`${o.groupId}:${o.optionId}`}>
                   <span className="text-foreground">{o.groupLabel}:</span>{" "}
                   {o.optionLabel}
                 </li>

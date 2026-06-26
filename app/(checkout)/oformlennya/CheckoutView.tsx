@@ -1039,7 +1039,7 @@ export function CheckoutView() {
                   {item.options && item.options.length > 0 && (
                     <ul className="mt-0.5 text-[10px] text-muted-foreground">
                       {item.options.map((o) => (
-                        <li key={o.groupId}>
+                        <li key={`${o.groupId}:${o.optionId}`}>
                           {o.groupLabel}: {o.optionLabel}
                         </li>
                       ))}
