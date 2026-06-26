@@ -71,7 +71,9 @@ export interface ConfigOption {
   /** ₴ delta relative to base price. Can be 0 or negative. */
   priceDelta: number;
   isDefault?: boolean;
-  /** CRM-ключ з Sanity `buildAddon.key` (додаткові опції). */
+  /** SKU з довідника Sanity (`cpu` / `gpu` / `ram` / `buildAddon`). */
+  sku?: string;
+  /** @deprecated Використовуй `sku`. Залишено для сумісності зі старими кошиками. */
   addonKey?: string;
   /** Категорія addon — для взаємовиключного вибору в межах групи. */
   addonCategory?: BuildAddonCategory;

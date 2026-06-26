@@ -341,7 +341,8 @@ export function ProductConfiguratorProvider({
       ({ groupId, groupLabel, option }) => ({
         groupId,
         groupLabel,
-        optionId: option.addonKey ?? option.id,
+        optionId: option.id,
+        optionSku: option.sku,
         optionLabel: option.label,
         priceDelta: option.priceDelta,
       }),

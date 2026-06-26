@@ -1,4 +1,4 @@
-import type { CartItem } from "@/lib/cartStore";
+import type { CartItem, CartItemOption } from "@/lib/cartStore";
 import type { BuildSpecShort } from "@/types/build";
 
 /** Групи опцій, які вже відображаються в `spec`. */
@@ -19,16 +19,36 @@ function formatGpuLine(spec: BuildSpecShort): string {
   return `${spec.gpu} ${spec.gpuVram}`;
 }
 
+function formatCartOptionLine(option: CartItemOption): string {
+  const skuSuffix = option.optionSku ? ` · ${option.optionSku}` : "";
+  if (option.groupId === "addons") {
+    return `${option.optionLabel}${skuSuffix}`;
+  }
+  return `${option.groupLabel}: ${option.optionLabel}${skuSuffix}`;
+}
+
+function specSkuSuffix(
+  options: CartItemOption[] | undefined,
+  groupId: string,
+): string {
+  const sku = options?.find((option) => option.groupId === groupId)?.optionSku;
+  return sku ? ` · ${sku}` : "";
+}
+
 /** Рядки специфікації товару для замовлень (Telegram, KeyCRM, MonoPay). */
 export function getCartItemSpecificationLines(item: CartItem): string[] {
   const lines: string[] = [];
 
   if (item.itemType === "build" && item.spec) {
-    lines.push(`CPU: ${item.spec.cpu}`);
-    lines.push(`GPU: ${formatGpuLine(item.spec)}`);
+    lines.push(`CPU: ${item.spec.cpu}${specSkuSuffix(item.options, "cpu")}`);
+    lines.push(`GPU: ${formatGpuLine(item.spec)}${specSkuSuffix(item.options, "gpu")}`);
     const ramSpeed = item.spec.ramSpeed ? ` ${item.spec.ramSpeed} MHz` : "";
-    lines.push(`RAM: ${item.spec.ram}${ramSpeed}`);
-    lines.push(`Накопичувач: ${item.spec.storage}`);
+    lines.push(
+      `RAM: ${item.spec.ram}${ramSpeed}${specSkuSuffix(item.options, "ram")}`,
+    );
+    lines.push(
+      `Накопичувач: ${item.spec.storage}${specSkuSuffix(item.options, "storage")}`,
+    );
   }
 
   if (item.colorName) {
@@ -39,12 +59,7 @@ export function getCartItemSpecificationLines(item: CartItem): string[] {
     if (item.spec && SPEC_COVERED_OPTION_GROUPS.has(option.groupId)) {
       return;
     }
-    // У групі «Додаткові опції» кожна опція — окремий рядок з назвою.
-    if (option.groupId === "addons") {
-      lines.push(option.optionLabel);
-      return;
-    }
-    lines.push(`${option.groupLabel}: ${option.optionLabel}`);
+    lines.push(formatCartOptionLine(option));
   });
 
   return lines;

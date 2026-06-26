@@ -66,6 +66,8 @@ type RawBuildBenefit = {
 };
 
 type RawBuildAddonDoc = {
+  sku?: string;
+  /** @deprecated legacy slug before catalog SKU */
   key?: string;
   title?: string;
   description?: string;
@@ -87,6 +89,7 @@ type RawCpuDoc = {
   brand?: string;
   model?: string;
   priceUah?: number;
+  sku?: string;
 };
 
 type RawRamDoc = {
@@ -96,6 +99,7 @@ type RawRamDoc = {
   speedMhz?: number;
   kitLayout?: string;
   priceUah?: number;
+  sku?: string;
 };
 
 type RawGpuDoc = {
@@ -103,6 +107,7 @@ type RawGpuDoc = {
   model?: string;
   vram?: string;
   priceUah?: number;
+  sku?: string;
   fps?: RawFps[];
 };
 
@@ -207,7 +212,8 @@ const BUILDS_QUERY = `
     "cpuDoc": cpu->{
       brand,
       model,
-      priceUah
+      priceUah,
+      "sku": sku.current
     }
   }, []),
   "gpuOptions": coalesce(gpuOptions[]{
@@ -220,6 +226,7 @@ const BUILDS_QUERY = `
       model,
       vram,
       priceUah,
+      "sku": sku.current,
       "fps": coalesce(
         fps[]{
           "gameSlug": coalesce(game->slug, gameSlug),
@@ -244,7 +251,8 @@ const BUILDS_QUERY = `
       memoryType,
       speedMhz,
       kitLayout,
-      priceUah
+      priceUah,
+      "sku": sku.current
     }
   }, []),
   "ssdOptions": coalesce(ssdOptions, []),
@@ -254,6 +262,7 @@ const BUILDS_QUERY = `
     isIncluded,
     sortOrder,
     "addon": addon->{
+      "sku": sku.current,
       key,
       title,
       description,
@@ -321,6 +330,7 @@ function mapCpuOptions(options: RawCpuConfigOption[]): ConfigOption[] {
       description: row.description?.trim() || undefined,
       priceDelta: typeof doc.priceUah === "number" ? doc.priceUah : 0,
       isDefault: Boolean(row.isDefault),
+      sku: doc.sku?.trim() || undefined,
     });
   });
   return result;
@@ -340,6 +350,7 @@ function mapRamOptions(options: RawRamConfigOption[]): ConfigOption[] {
       isDefault: Boolean(row.isDefault),
       ramSpeed:
         typeof doc.speedMhz === "number" ? String(doc.speedMhz) : undefined,
+      sku: doc.sku?.trim() || undefined,
     });
   });
   return result;
@@ -362,6 +373,7 @@ function mapGpuOptions(options: RawGpuConfigOption[]): ConfigOption[] {
       priceDelta: typeof doc.priceUah === "number" ? doc.priceUah : 0,
       isDefault: Boolean(row.isDefault),
       gpuVram: doc.vram?.trim() || undefined,
+      sku: doc.sku?.trim() || undefined,
       fpsCoefficient,
       fps: mapFpsRows(doc.fps ?? [], fpsCoefficient),
     });
@@ -417,7 +429,7 @@ function mapAddonCategory(value?: string): BuildAddonCategory {
 }
 
 type ResolvedBuildAddon = {
-  key: string;
+  sku: string;
   title: string;
   description?: string;
   priceDelta: number;
@@ -434,9 +446,9 @@ function resolveBuildAddons(rows?: RawAvailableAddon[]): ResolvedBuildAddon[] {
   for (const row of rows) {
     const doc = row.addon;
     if (!doc || doc.isActive === false) continue;
-    const key = doc.key?.trim();
+    const sku = doc.sku?.trim() || doc.key?.trim();
     const title = doc.title?.trim();
-    if (!key || !title) continue;
+    if (!sku || !title) continue;
 
     const isIncluded = Boolean(row.isIncluded);
     const priceDelta = isIncluded
@@ -455,7 +467,7 @@ function resolveBuildAddons(rows?: RawAvailableAddon[]): ResolvedBuildAddon[] {
           : 999;
 
     resolved.push({
-      key,
+      sku,
       title,
       description: doc.description?.trim() || undefined,
       priceDelta,
@@ -471,8 +483,8 @@ function resolveBuildAddons(rows?: RawAvailableAddon[]): ResolvedBuildAddon[] {
 
 function mapAddonToOption(addon: ResolvedBuildAddon): ConfigOption {
   return {
-    id: addon.key,
-    addonKey: addon.key,
+    id: addon.sku,
+    sku: addon.sku,
     addonCategory: addon.category,
     addonSelectionMode: addon.selectionMode,
     label: addon.title,
