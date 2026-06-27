@@ -163,9 +163,7 @@ export function CartDrawer() {
                     {formatPrice(total)}
                   </span>
                 </div>
-                <div className="text-[11px] text-muted-foreground">
-                  Доставка НП · безкоштовно від 1500 ₴
-                </div>
+
                 <TechButtonLink
                   href="/oformlennya"
                   size="md"
