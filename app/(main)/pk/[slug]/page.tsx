@@ -96,7 +96,7 @@ const ASSEMBLY_STEPS = [
     n: 1,
     icon: PackageCheck,
     title: "Отримання компонентів",
-    text: "Тільки нові деталі від офіційних постачальників. Перевіряємо кожну.",
+    text: "Деталі від офіційних постачальників. Перевіряємо кожну.",
   },
   {
     n: 2,
@@ -299,7 +299,10 @@ export default async function BuildPage({
             titleClassName="mt-3 lg:mt-7 mb-5 lg:mb-10 lg:text-[36px]"
             subtitleClassName="lg:max-w-[466px]"
           />
-          <ConfiguratorFpsTable build={build} gameShortLabels={gameShortLabels} />
+          <ConfiguratorFpsTable
+            build={build}
+            gameShortLabels={gameShortLabels}
+          />
         </Section>
 
         {build.gameplayVideoUrl ? (
