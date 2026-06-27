@@ -71,7 +71,7 @@ export function BuildRepeatCta() {
             priceUah={build.priceUah}
           />
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            Доставка безкоштовно · Гарантія 12 міс · Повернення 14 днів
+            Гарантія 12 міс · Повернення 14 днів
           </div>
         </div>
       </div>
