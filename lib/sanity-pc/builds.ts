@@ -4,6 +4,7 @@ import type {
   BuildBenefit,
   BuildFpsEntry,
   BuildImage,
+  BuildSpecShort,
   ConfigGroup,
   ConfigOption,
   Review,
@@ -65,6 +66,8 @@ type RawBuildBenefit = {
 };
 
 type RawBuildAddonDoc = {
+  sku?: string;
+  /** @deprecated legacy slug before catalog SKU */
   key?: string;
   title?: string;
   description?: string;
@@ -82,6 +85,54 @@ type RawAvailableAddon = {
   addon?: RawBuildAddonDoc | null;
 };
 
+type RawCpuDoc = {
+  brand?: string;
+  model?: string;
+  priceUah?: number;
+  sku?: string;
+};
+
+type RawRamDoc = {
+  title?: string;
+  capacityGb?: number;
+  memoryType?: string;
+  speedMhz?: number;
+  kitLayout?: string;
+  priceUah?: number;
+  sku?: string;
+};
+
+type RawGpuDoc = {
+  brand?: string;
+  model?: string;
+  vram?: string;
+  priceUah?: number;
+  sku?: string;
+  fps?: RawFps[];
+};
+
+type RawCpuConfigOption = {
+  id?: string;
+  description?: string;
+  isDefault?: boolean;
+  cpuDoc?: RawCpuDoc | null;
+};
+
+type RawRamConfigOption = {
+  id?: string;
+  description?: string;
+  isDefault?: boolean;
+  ramDoc?: RawRamDoc | null;
+};
+
+type RawGpuConfigOption = {
+  id?: string;
+  description?: string;
+  isDefault?: boolean;
+  fpsCoefficient?: number;
+  gpuDoc?: RawGpuDoc | null;
+};
+
 type RawBuild = {
   slug: string;
   sku?: string;
@@ -95,10 +146,6 @@ type RawBuild = {
   assemblyDays: number;
   colorVariant?: Build["colorVariant"];
   targetResolution: Build["targetResolution"];
-  cpu: string;
-  baseRam: string;
-  ramSpeed?: string;
-  baseStorage: string;
   powerConsumptionW?: number;
   noiseLevelDb?: number;
   upgradePathNotes?: string;
@@ -113,14 +160,9 @@ type RawBuild = {
   gameplayVideoUrl?: string;
   gameplayVideoPoster?: unknown;
   gameplayVideoUploadDate?: string;
-  fpsCoefficient?: number;
-  gpuDoc?: {
-    brand?: string;
-    model?: string;
-    vram?: string;
-    fps?: RawFps[];
-  };
-  ramOptions?: RawConfigOption[];
+  cpuOptions?: RawCpuConfigOption[];
+  gpuOptions?: RawGpuConfigOption[];
+  ramOptions?: RawRamConfigOption[];
   ssdOptions?: RawConfigOption[];
   warrantyOptions?: RawConfigOption[];
   availableAddons?: RawAvailableAddon[];
@@ -142,10 +184,6 @@ const BUILDS_QUERY = `
   assemblyDays,
   colorVariant,
   targetResolution,
-  cpu,
-  baseRam,
-  ramSpeed,
-  baseStorage,
   powerConsumptionW,
   noiseLevelDb,
   upgradePathNotes,
@@ -167,25 +205,56 @@ const BUILDS_QUERY = `
   gameplayVideoUrl,
   gameplayVideoPoster,
   gameplayVideoUploadDate,
-  fpsCoefficient,
-  "gpuDoc": gpu->{
-    brand,
-    model,
-    vram,
-    "fps": coalesce(
-      fps[]{
-        "gameSlug": coalesce(game->slug, gameSlug),
-        resolution,
-        settings,
-        fpsAvg,
-        fpsMin,
-        verified,
-        notes
-      },
-      []
-    )
-  },
-  "ramOptions": coalesce(ramOptions, []),
+  "cpuOptions": coalesce(cpuOptions[]{
+    id,
+    description,
+    isDefault,
+    "cpuDoc": cpu->{
+      brand,
+      model,
+      priceUah,
+      "sku": sku.current
+    }
+  }, []),
+  "gpuOptions": coalesce(gpuOptions[]{
+    id,
+    description,
+    isDefault,
+    fpsCoefficient,
+    "gpuDoc": gpu->{
+      brand,
+      model,
+      vram,
+      priceUah,
+      "sku": sku.current,
+      "fps": coalesce(
+        fps[]{
+          "gameSlug": coalesce(game->slug, gameSlug),
+          resolution,
+          settings,
+          fpsAvg,
+          fpsMin,
+          verified,
+          notes
+        },
+        []
+      )
+    }
+  }, []),
+  "ramOptions": coalesce(ramOptions[]{
+    id,
+    description,
+    isDefault,
+    "ramDoc": ram->{
+      title,
+      capacityGb,
+      memoryType,
+      speedMhz,
+      kitLayout,
+      priceUah,
+      "sku": sku.current
+    }
+  }, []),
   "ssdOptions": coalesce(ssdOptions, []),
   "warrantyOptions": coalesce(warrantyOptions, []),
   "availableAddons": coalesce(availableAddons[]{
@@ -193,6 +262,7 @@ const BUILDS_QUERY = `
     isIncluded,
     sortOrder,
     "addon": addon->{
+      "sku": sku.current,
       key,
       title,
       description,
@@ -240,6 +310,110 @@ function mapConfigOptions(options: RawConfigOption[], prefix: string): ConfigOpt
     }));
 }
 
+function normalizeCatalogOptionId(
+  rawId: string | undefined,
+  index: number,
+  prefix: string,
+): string {
+  if (rawId?.trim()) return rawId.trim();
+  return `${prefix}-${index}`;
+}
+
+function mapCpuOptions(options: RawCpuConfigOption[]): ConfigOption[] {
+  const result: ConfigOption[] = [];
+  options.forEach((row, index) => {
+    const doc = row.cpuDoc;
+    if (!doc?.brand?.trim() || !doc.model?.trim()) return;
+    result.push({
+      id: normalizeCatalogOptionId(row.id, index + 1, "cpu"),
+      label: `${doc.brand.trim()} ${doc.model.trim()}`,
+      description: row.description?.trim() || undefined,
+      priceDelta: typeof doc.priceUah === "number" ? doc.priceUah : 0,
+      isDefault: Boolean(row.isDefault),
+      sku: doc.sku?.trim() || undefined,
+    });
+  });
+  return result;
+}
+
+function mapRamOptions(options: RawRamConfigOption[]): ConfigOption[] {
+  const result: ConfigOption[] = [];
+  options.forEach((row, index) => {
+    const doc = row.ramDoc;
+    const title = doc?.title?.trim();
+    if (!doc || !title) return;
+    result.push({
+      id: normalizeCatalogOptionId(row.id, index + 1, "ram"),
+      label: title,
+      description: row.description?.trim() || undefined,
+      priceDelta: typeof doc.priceUah === "number" ? doc.priceUah : 0,
+      isDefault: Boolean(row.isDefault),
+      ramSpeed:
+        typeof doc.speedMhz === "number" ? String(doc.speedMhz) : undefined,
+      sku: doc.sku?.trim() || undefined,
+    });
+  });
+  return result;
+}
+
+function mapGpuOptions(options: RawGpuConfigOption[]): ConfigOption[] {
+  const result: ConfigOption[] = [];
+  options.forEach((row, index) => {
+    const doc = row.gpuDoc;
+    if (!doc?.brand?.trim() || !doc.model?.trim()) return;
+    const fpsCoefficient =
+      typeof row.fpsCoefficient === "number" &&
+      Number.isFinite(row.fpsCoefficient)
+        ? row.fpsCoefficient
+        : 1;
+    result.push({
+      id: normalizeCatalogOptionId(row.id, index + 1, "gpu"),
+      label: `${doc.brand.trim()} ${doc.model.trim()}`,
+      description: row.description?.trim() || undefined,
+      priceDelta: typeof doc.priceUah === "number" ? doc.priceUah : 0,
+      isDefault: Boolean(row.isDefault),
+      gpuVram: doc.vram?.trim() || undefined,
+      sku: doc.sku?.trim() || undefined,
+      fpsCoefficient,
+      fps: mapFpsRows(doc.fps ?? [], fpsCoefficient),
+    });
+  });
+  return result;
+}
+
+function findDefaultOption(group?: ConfigGroup): ConfigOption | undefined {
+  if (!group?.options.length) return undefined;
+  return group.options.find((option) => option.isDefault) ?? group.options[0];
+}
+
+function deriveDefaultSpec(
+  groups: ConfigGroup[] | undefined,
+  components: Build["components"],
+): BuildSpecShort {
+  const byId = (id: string) => groups?.find((group) => group.id === id);
+  const cpu = findDefaultOption(byId("cpu"));
+  const gpu = findDefaultOption(byId("gpu"));
+  const ram = findDefaultOption(byId("ram"));
+  const storage = findDefaultOption(byId("storage"));
+
+  const componentLabel = (category: Build["components"][number]["category"]) =>
+    components.find((component) => component.category === category)?.displayName;
+
+  return {
+    cpu: cpu?.label ?? componentLabel("cpu") ?? "CPU",
+    gpu: gpu?.label ?? componentLabel("gpu") ?? "GPU",
+    gpuVram: gpu?.gpuVram,
+    ram: ram?.label ?? componentLabel("ram") ?? "RAM",
+    ramSpeed: ram?.ramSpeed,
+    storage: storage?.label ?? componentLabel("ssd") ?? "SSD",
+  };
+}
+
+function deriveDefaultFps(groups: ConfigGroup[] | undefined): BuildFpsEntry[] {
+  const gpu = findDefaultOption(groups?.find((group) => group.id === "gpu"));
+  return gpu?.fps ?? [];
+}
+
 function mapAddonCategory(value?: string): BuildAddonCategory {
   if (
     value === "network" ||
@@ -255,7 +429,7 @@ function mapAddonCategory(value?: string): BuildAddonCategory {
 }
 
 type ResolvedBuildAddon = {
-  key: string;
+  sku: string;
   title: string;
   description?: string;
   priceDelta: number;
@@ -272,9 +446,9 @@ function resolveBuildAddons(rows?: RawAvailableAddon[]): ResolvedBuildAddon[] {
   for (const row of rows) {
     const doc = row.addon;
     if (!doc || doc.isActive === false) continue;
-    const key = doc.key?.trim();
+    const sku = doc.sku?.trim() || doc.key?.trim();
     const title = doc.title?.trim();
-    if (!key || !title) continue;
+    if (!sku || !title) continue;
 
     const isIncluded = Boolean(row.isIncluded);
     const priceDelta = isIncluded
@@ -293,7 +467,7 @@ function resolveBuildAddons(rows?: RawAvailableAddon[]): ResolvedBuildAddon[] {
           : 999;
 
     resolved.push({
-      key,
+      sku,
       title,
       description: doc.description?.trim() || undefined,
       priceDelta,
@@ -309,8 +483,8 @@ function resolveBuildAddons(rows?: RawAvailableAddon[]): ResolvedBuildAddon[] {
 
 function mapAddonToOption(addon: ResolvedBuildAddon): ConfigOption {
   return {
-    id: addon.key,
-    addonKey: addon.key,
+    id: addon.sku,
+    sku: addon.sku,
     addonCategory: addon.category,
     addonSelectionMode: addon.selectionMode,
     label: addon.title,
@@ -337,7 +511,27 @@ function makeAddonConfigGroups(addons: ResolvedBuildAddon[]): ConfigGroup[] {
 function makeConfigGroups(raw: RawBuild): ConfigGroup[] | undefined {
   const groups: ConfigGroup[] = [];
 
-  const ram = mapConfigOptions(raw.ramOptions ?? [], "ram");
+  const cpu = mapCpuOptions(raw.cpuOptions ?? []);
+  if (cpu.length > 0) {
+    groups.push({
+      id: "cpu",
+      label: "Процесор",
+      overridesSpec: "cpu",
+      options: cpu,
+    });
+  }
+
+  const gpu = mapGpuOptions(raw.gpuOptions ?? []);
+  if (gpu.length > 0) {
+    groups.push({
+      id: "gpu",
+      label: "Відеокарта",
+      overridesSpec: "gpu",
+      options: gpu,
+    });
+  }
+
+  const ram = mapRamOptions(raw.ramOptions ?? []);
   if (ram.length > 0) {
     groups.push({
       id: "ram",
@@ -374,21 +568,21 @@ function makeConfigGroups(raw: RawBuild): ConfigGroup[] | undefined {
   return groups.length > 0 ? groups : undefined;
 }
 
-function mapFps(raw: RawBuild): BuildFpsEntry[] {
-  const coefficient =
-    typeof raw.fpsCoefficient === "number" && Number.isFinite(raw.fpsCoefficient)
-      ? raw.fpsCoefficient
+function mapFpsRows(rows: RawFps[], coefficient = 1): BuildFpsEntry[] {
+  const safeCoefficient =
+    typeof coefficient === "number" && Number.isFinite(coefficient)
+      ? coefficient
       : 1;
 
   const entries: BuildFpsEntry[] = [];
-  for (const row of raw.gpuDoc?.fps ?? []) {
+  for (const row of rows) {
     const resolution = mapResolution(row.resolution);
     if (!resolution || !row.gameSlug || typeof row.fpsAvg !== "number") continue;
 
-    const adjustedAvg = Math.max(1, Math.round(row.fpsAvg * coefficient));
+    const adjustedAvg = Math.max(1, Math.round(row.fpsAvg * safeCoefficient));
     const adjustedMin =
       typeof row.fpsMin === "number"
-        ? Math.max(1, Math.round(row.fpsMin * coefficient))
+        ? Math.max(1, Math.round(row.fpsMin * safeCoefficient))
         : undefined;
 
     const settings = mapSettings(row.settings);
@@ -572,7 +766,10 @@ function mapBuild(raw: RawBuild): Build {
     raw.gameplayVideoPoster,
     GAMEPLAY_VIDEO_POSTER_FALLBACK_ALT,
   );
-  const gpuLabel = [raw.gpuDoc?.brand, raw.gpuDoc?.model].filter(Boolean).join(" ").trim();
+  const configurableOptions = makeConfigGroups(raw);
+  const components = raw.components ?? [];
+  const spec = deriveDefaultSpec(configurableOptions, components);
+  const fps = deriveDefaultFps(configurableOptions);
 
   return {
     slug: raw.slug as Build["slug"],
@@ -587,16 +784,9 @@ function mapBuild(raw: RawBuild): Build {
     status: raw.status,
     showInHomeTop3: Boolean(raw.showInHomeTop3),
     assemblyDays: raw.assemblyDays,
-    spec: {
-      cpu: raw.cpu,
-      gpu: gpuLabel || "GPU",
-      gpuVram: raw.gpuDoc?.vram,
-      ram: raw.baseRam,
-      ramSpeed: raw.ramSpeed,
-      storage: raw.baseStorage,
-    },
-    components: raw.components ?? [],
-    fps: mapFps(raw),
+    spec,
+    components,
+    fps,
     powerConsumptionW: raw.powerConsumptionW,
     noiseLevelDb: raw.noiseLevelDb,
     upgradePathNotes: raw.upgradePathNotes,
@@ -611,7 +801,7 @@ function mapBuild(raw: RawBuild): Build {
     gameplayVideoUrl: raw.gameplayVideoUrl,
     gameplayVideoPoster,
     gameplayVideoUploadDate: normalizeSanityDatetime(raw.gameplayVideoUploadDate),
-    configurableOptions: makeConfigGroups(raw),
+    configurableOptions,
     seo: raw.seo ?? null,
   };
 }

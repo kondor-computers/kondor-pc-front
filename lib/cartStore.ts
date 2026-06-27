@@ -10,7 +10,10 @@ export type CartItemType = "build" | "accessory";
 export interface CartItemOption {
   groupId: string;
   groupLabel: string;
+  /** Стабільний id варіанту (slug конфігуратора). */
   optionId: string;
+  /** SKU комплектуючого / addon з Sanity — для CRM. */
+  optionSku?: string;
   optionLabel: string;
   priceDelta: number;
 }
@@ -72,7 +75,7 @@ interface CartStore {
 function optionsSignature(options?: CartItemOption[]): string {
   if (!options || options.length === 0) return "base";
   return [...options]
-    .map((o) => `${o.groupId}:${o.optionId}`)
+    .map((o) => `${o.groupId}:${o.optionSku ?? o.optionId}`)
     .sort()
     .join("|");
 }

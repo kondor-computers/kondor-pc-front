@@ -60,7 +60,7 @@ import {
 } from "@/lib/build/images";
 import { LazyMarqueeLine } from "@/components/shared/LazyMarqueeLine";
 import { FaqBlock } from "@/components/shared/FaqBlock";
-import { FpsTable } from "@/components/shared/FpsTable";
+import { ConfiguratorFpsTable } from "@/components/shared/ConfiguratorFpsTable";
 import { AccessoriesRailContent } from "@/components/catalog/AccessoriesRailContent";
 import Image from "next/image";
 import { BuildHeroLcpImage } from "./BuildHeroLcpImage";
@@ -299,7 +299,7 @@ export default async function BuildPage({
             titleClassName="mt-3 lg:mt-7 mb-5 lg:mb-10 lg:text-[36px]"
             subtitleClassName="lg:max-w-[466px]"
           />
-          <FpsTable build={build} gameShortLabels={gameShortLabels} />
+          <ConfiguratorFpsTable build={build} gameShortLabels={gameShortLabels} />
         </Section>
 
         {build.gameplayVideoUrl ? (
