@@ -64,6 +64,11 @@ const PAYMENT = [
   },
   {
     icon: Wallet,
+    title: "Розстрочка",
+    text: "Від ПриватБанку, Monobank, ПУМБ чи А-Банку. Менеджер допоможе оформити найзручніший варіант.",
+  },
+  {
+    icon: Wallet,
     title: "Monobank Частинами",
     text: "3 платежі без %. Оформлення онлайн 2 хв.",
     visible: false,

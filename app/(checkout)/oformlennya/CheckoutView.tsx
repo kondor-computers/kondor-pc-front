@@ -100,6 +100,13 @@ const PAYMENT_OPTIONS: {
     group: "main",
   },
   {
+    value: "installment",
+    icon: Wallet,
+    title: "Розстрочка",
+    note: "ПриватБанк, Monobank, ПУМБ чи А-Банк",
+    group: "main",
+  },
+  {
     value: "monobank_parts",
     icon: Wallet,
     title: "Частинами Monobank",
