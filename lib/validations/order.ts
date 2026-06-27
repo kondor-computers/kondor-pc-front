@@ -12,6 +12,7 @@ export type DeliveryMethod = (typeof DELIVERY_METHODS)[number];
 export const PAYMENT_METHODS = [
   "cod",
   "monopay",
+  "installment",
   "monobank_parts",
   "privat_parts",
   "pumb_parts",

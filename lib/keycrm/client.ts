@@ -30,6 +30,8 @@ function mapPayment(paymentMethod: PaymentMethod): {
       return { payment_method: "Для ФОП / ЮО", payment_method_id: 8 };
     case "crypto":
       return { payment_method: "Криптовалюта", payment_method_id: 9 };
+    case "installment":
+      return { payment_method: "Розстрочка", payment_method_id: 10 };
     case "monobank_parts":
       return { payment_method: "Частинами Monobank" };
     case "privat_parts":

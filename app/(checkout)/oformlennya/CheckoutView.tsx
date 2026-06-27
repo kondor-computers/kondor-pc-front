@@ -60,7 +60,7 @@ const DELIVERY_OPTIONS: {
     value: "np_branch",
     icon: Package,
     title: "Нова Пошта — відділення",
-    note: "Безкоштовно · 1–3 дні",
+    note: "200–400 ₴ · 1–3 дні",
   },
   {
     value: "np_courier",
@@ -97,6 +97,13 @@ const PAYMENT_OPTIONS: {
     icon: Package,
     title: "Оплата при отриманні на НП",
     note: "Комісія НП: 2% + 20 ₴",
+    group: "main",
+  },
+  {
+    value: "installment",
+    icon: Wallet,
+    title: "Розстрочка",
+    note: "ПриватБанк, Monobank, ПУМБ чи А-Банк",
     group: "main",
   },
   {
@@ -150,6 +157,11 @@ function visiblePaymentOptions(group: "main" | "other") {
   return PAYMENT_OPTIONS.filter(
     (o) => o.group === group && o.visible !== false,
   );
+}
+
+function deliverySummaryLabel(method: DeliveryMethod): string {
+  if (method === "self_pickup") return "Безкоштовно";
+  return "200–400 ₴";
 }
 
 function optionTitle<T extends { value: string; title: string }>(
@@ -977,7 +989,7 @@ export function CheckoutView() {
               {isSubmitting ? "Оформлюємо..." : "Підтвердити замовлення"}
             </TechButton>
             <p className="text-center text-[11px] uppercase tracking-wider text-muted-foreground">
-              Гарантія 12 міс · Повернення 14 днів · Доставка НП безкоштовно
+              Гарантія 12 міс · Повернення 14 днів
             </p>
           </div>
         </section>
@@ -1071,7 +1083,7 @@ export function CheckoutView() {
           ) : null}
           <div className="flex justify-between text-muted-foreground">
             <span>Доставка</span>
-            <span>Безкоштовно</span>
+            <span>{deliverySummaryLabel(deliveryMethod)}</span>
           </div>
         </div>
 

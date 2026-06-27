@@ -12,7 +12,8 @@ import { buildImageUrl } from "@/lib/build/images";
 import { useCartStore } from "@/lib/cartStore";
 import { useProductConfiguratorOptional } from "@/components/shared/ProductConfigurator";
 
-const TELEGRAM_HANDLE = process.env.NEXT_PUBLIC_TELEGRAM_HANDLE || "kondor_pc";
+const TELEGRAM_HANDLE =
+  process.env.NEXT_PUBLIC_TELEGRAM_HANDLE || "kondor_pc_admin";
 
 /**
  * Sticky bottom bar on mobile, sticky top-offset bar on desktop.
