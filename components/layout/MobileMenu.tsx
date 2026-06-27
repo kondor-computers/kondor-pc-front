@@ -139,7 +139,7 @@ export function MobileMenu({
               Телефон
             </a>
             <a
-              href="https://t.me/kondor_pc"
+              href="https://t.me/kondor_pc_admin"
               target="_blank"
               rel="noopener noreferrer"
               onClick={onClose}
@@ -228,7 +228,9 @@ function MobileGroup({
           "group/mitem relative flex w-full items-center justify-between py-3.5",
           "text-xs font-medium uppercase tracking-[0.22em]",
           "transition-colors duration-200 ease-out",
-          open ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+          open
+            ? "text-foreground"
+            : "text-muted-foreground hover:text-foreground",
         )}
       >
         <span>{group.label}</span>
@@ -243,9 +245,7 @@ function MobileGroup({
       <div
         className={cn(
           "grid transition-all duration-300 ease-out",
-          open
-            ? "grid-rows-[1fr] opacity-100"
-            : "grid-rows-[0fr] opacity-0",
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
         )}
       >
         <div className="overflow-hidden">

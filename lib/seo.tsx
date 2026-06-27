@@ -2,7 +2,12 @@ import type { Build, Faq } from "@/types/build";
 import type { CatalogProductDetail } from "@/types/catalog";
 import type { FaqSchemaItem } from "@/lib/seo/faqSchema";
 import { pcBuildProductJsonLd } from "@/lib/seo/pcBuildProductJsonLd";
-import { ORGANIZATION_LOGO_HEIGHT, ORGANIZATION_LOGO_URL, ORGANIZATION_LOGO_WIDTH, SITE_URL } from "@/lib/seo/constants";
+import {
+  ORGANIZATION_LOGO_HEIGHT,
+  ORGANIZATION_LOGO_URL,
+  ORGANIZATION_LOGO_WIDTH,
+  SITE_URL,
+} from "@/lib/seo/constants";
 import {
   ensureHttps,
   getSiteContacts,
@@ -18,7 +23,7 @@ export async function organizationJsonLd() {
     ? ensureHttps(contacts.telegramChatUrl)
     : contacts?.telegram
       ? telegramHref(contacts.telegram)
-      : "https://t.me/kondor_pc";
+      : "https://t.me/kondor_pc_admin";
   const instagramUrl = contacts?.instagramUrl
     ? ensureHttps(contacts.instagramUrl)
     : "https://www.instagram.com/kondor_pc";
@@ -82,16 +87,9 @@ export function websiteJsonLd() {
   };
 }
 
-export function webPageJsonLd({
-  path,
-  name,
-}: {
-  path: string;
-  name: string;
-}) {
+export function webPageJsonLd({ path, name }: { path: string; name: string }) {
   const siteUrl = SITE_URL.replace(/\/$/, "");
-  const pathname =
-    path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
+  const pathname = path === "/" ? "" : path.startsWith("/") ? path : `/${path}`;
   const url = `${siteUrl}${pathname}`;
 
   return {
@@ -105,9 +103,7 @@ export function webPageJsonLd({
   };
 }
 
-export function breadcrumbJsonLd(
-  items: Array<{ name: string; url: string }>,
-) {
+export function breadcrumbJsonLd(items: Array<{ name: string; url: string }>) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -166,9 +162,7 @@ export function catalogProductJsonLd(
 
 export type { FaqSchemaItem } from "@/lib/seo/faqSchema";
 
-export function faqPageJsonLd(
-  items: Faq[] | FaqSchemaItem[],
-): object | null {
+export function faqPageJsonLd(items: Faq[] | FaqSchemaItem[]): object | null {
   const mainEntity = items
     .filter((f) => f.question?.trim() && f.answer?.trim())
     .map((f) => ({
@@ -186,11 +180,7 @@ export function faqPageJsonLd(
   };
 }
 
-export function JsonLd({
-  data,
-}: {
-  data: object | object[];
-}) {
+export function JsonLd({ data }: { data: object | object[] }) {
   const payload = Array.isArray(data) ? data : [data];
   return (
     <>
