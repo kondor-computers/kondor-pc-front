@@ -8,7 +8,7 @@ import { SeoContentBlock } from "@/components/seo/SeoContentBlock";
 import { buildPageMetadata } from "@/lib/sanity/pageSeo";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
-export const revalidate = 60;
+export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
 
 export async function generateMetadata({
   searchParams,

@@ -43,7 +43,12 @@ export async function getAllGames(): Promise<Game[]> {
   const rows = await sanityPcClient.fetch<RawGame[]>(
     GAMES_QUERY,
     {},
-    { next: { revalidate: SANITY_REVALIDATE_SECONDS } },
+    {
+      next: {
+        revalidate: SANITY_REVALIDATE_SECONDS,
+        tags: ["sanity:pc:games"],
+      },
+    },
   );
   return rows
     .filter((g) => Boolean(g.slug && g.name))
