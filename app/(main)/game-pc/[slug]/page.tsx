@@ -13,8 +13,8 @@ import {buildLandingMetadata} from "@/lib/sanity/landingSeo";
 import {JsonLd, faqPageJsonLd} from "@/lib/seo";
 import {extractLandingFaqSchemaItems} from "@/lib/seo/faqSchema";
 
-// ISR. Sanity webhook will revalidate by tag later (Sprint 3).
-export const revalidate = 60;
+// ISR + on-demand revalidation via Sanity webhook → /api/revalidate.
+export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

@@ -35,7 +35,7 @@ import { HomePcTasksSection } from "./home/HomePcTasksSection";
 import { FaqBlock } from "@/components/shared/FaqBlock";
 import { SitePageSeoContent } from "@/components/seo/SitePageSeoContent";
 
-export const revalidate = 60;
+export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
 
 export async function generateMetadata(): Promise<Metadata> {
   return metadataForSitePage("seoHomePage");

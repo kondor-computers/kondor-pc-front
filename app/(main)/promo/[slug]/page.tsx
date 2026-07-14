@@ -14,7 +14,7 @@ import {extractLandingFaqSchemaItems} from "@/lib/seo/faqSchema";
 
 // ISR. Promo pages can have `expiresAt` set in Sanity; expired ones drop
 // out of `generateStaticParams` automatically (handled in fetchLandingSlugs).
-export const revalidate = 60;
+export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
 export const dynamicParams = true;
 
 export async function generateStaticParams() {

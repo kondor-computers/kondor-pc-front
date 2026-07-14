@@ -17,7 +17,7 @@ import {
   parseFiltersFromParams,
 } from "@/lib/catalog/pkFilters";
 
-export const revalidate = 60;
+export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
 
 function hasSeoFilterParams(params: Record<string, string | undefined>): boolean {
   return ["min", "max", "games", "res", "sort"].some((key) => {

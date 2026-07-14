@@ -20,7 +20,7 @@ import {
 } from "./RecommendedPostsSection";
 import { RecommendedAsideSkeleton } from "./RecommendedPostsSkeleton";
 
-export const revalidate = 60;
+export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
 export const dynamicParams = true;
 
 interface ArticlePageProps {
