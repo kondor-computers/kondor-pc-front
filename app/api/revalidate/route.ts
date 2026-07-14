@@ -1,6 +1,6 @@
 import { isValidSignature, SIGNATURE_HEADER_NAME } from "@sanity/webhook";
 import { revalidatePath, revalidateTag } from "next/cache";
-import { after, NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 import { SITE_SEO_CONFIG, SITE_SEO_PAGE_IDS } from "@/lib/sanity/siteSeoConfig";
 
@@ -162,19 +162,6 @@ function pathsForDocument(doc: WebhookPayload): PathTarget[] {
   });
 }
 
-// Give the delayed second pass (see `after` below) enough room to run.
-// Hobby plan default is 10s; this stays comfortably within the 60s cap.
-export const maxDuration = 15;
-
-function runRevalidation(tags: string[], paths: PathTarget[]) {
-  for (const tag of tags) {
-    revalidateTag(tag);
-  }
-  for (const { path, type } of paths) {
-    revalidatePath(path, type);
-  }
-}
-
 export async function POST(req: NextRequest) {
   const secret = process.env.SANITY_REVALIDATE_SECRET;
   if (!secret) {
@@ -215,24 +202,12 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  runRevalidation(tags, paths);
-
-  /**
-   * Vercel's on-demand revalidation purges the path and pushes fresh content
-   * to all CDN regions in the background, but that global push isn't always
-   * instant — some edge regions were observed still serving stale HTML for a
-   * few minutes after the first call. Re-running the same revalidation once
-   * more, after the response is sent, gives lagging regions a second chance
-   * to pick up the change on their next request. Per Vercel's docs, ISR
-   * write units are only charged when the regenerated content actually
-   * differs from what's cached — so once the first pass has landed, this
-   * second pass is effectively free (no extra ISR writes, just a Function
-   * invocation on the already-tiny webhook-triggered volume).
-   */
-  after(async () => {
-    await new Promise((resolve) => setTimeout(resolve, 5000));
-    runRevalidation(tags, paths);
-  });
+  for (const tag of tags) {
+    revalidateTag(tag);
+  }
+  for (const { path, type } of paths) {
+    revalidatePath(path, type);
+  }
 
   return NextResponse.json({
     revalidated: true,
