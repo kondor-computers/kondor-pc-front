@@ -32,7 +32,10 @@ const baseContact = z.object({
   customerPhone: z
     .string()
     .regex(PHONE_REGEX, "Формат: +380XXXXXXXXX"),
-  customerEmail: z.string().email("Перевір формат email"),
+  customerTelegram: z
+    .string()
+    .min(2, "Вкажіть нік або номер")
+    .max(64, "Занадто довге значення"),
 });
 
 export const orderSchema = baseContact.extend({
@@ -59,13 +62,7 @@ export const orderSchema = baseContact.extend({
 
 export type OrderFormValues = z.infer<typeof orderSchema>;
 
-export const customBuildSchema = baseContact
-  .omit({ customerEmail: true })
-  .extend({
-  customerTelegram: z
-    .string()
-    .min(2, "Вкажіть нік або номер")
-    .max(64, "Занадто довге значення"),
+export const customBuildSchema = baseContact.extend({
   budgetMin: z.number().int().min(10000),
   budgetMax: z.number().int().max(300000),
   task: z.enum([
