@@ -110,16 +110,19 @@ export function buildKeyCrmOrderPayload(params: {
   const { orderNumber, orderDate, values, cartItems, promoForOrder, payableTotal } =
     params;
   const orderedAt = orderDate.toISOString().slice(0, 19).replace("T", " ");
+  const buyerCommentParts = [
+    `Telegram: ${values.customerTelegram.trim()}`,
+    values.customerComment?.trim() || "",
+  ].filter(Boolean);
   const basePayload = {
     source_id: KEYCRM_SOURCE_ID,
     source_uuid: orderNumber,
     orderedAt,
     promocode: promoForOrder?.promo.code,
-    buyer_comment: values.customerComment?.trim() || undefined,
+    buyer_comment: buyerCommentParts.join("\n"),
     buyer: {
       full_name: values.customerName.trim(),
       phone: values.customerPhone.trim(),
-      email: values.customerEmail.trim(),
     },
     shipping: mapDelivery(values.deliveryMethod, values),
     products: mapProducts(cartItems),

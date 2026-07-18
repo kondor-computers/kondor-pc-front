@@ -477,7 +477,7 @@ export function CheckoutView() {
       `${TG.number} <b>Номер:</b> ${orderNumber}\n\n` +
       `${TG.name} <b>Ім'я:</b> ${values.customerName.trim()}\n` +
       `${TG.phone} <b>Телефон:</b> ${values.customerPhone.trim()}\n` +
-      `${TG.email} <b>Email:</b> ${values.customerEmail.trim()}\n\n` +
+      `${TG.telegram} <b>Telegram:</b> ${values.customerTelegram.trim()}\n\n` +
       `${TG.delivery} <b>Доставка:</b> ${optionTitle(DELIVERY_OPTIONS, values.deliveryMethod)}\n` +
       formatDeliveryDetails(values) +
       `${TG.payment} <b>Оплата:</b> ${optionTitle(PAYMENT_OPTIONS, values.paymentMethod)}\n` +
@@ -621,14 +621,14 @@ export function CheckoutView() {
               />
             </Field>
             <Field
-              label="Email"
-              hint="Надішлемо номер замовлення та трек-номер"
-              error={errors.customerEmail?.message}
+              label="Telegram"
+              hint="Напишемо номер замовлення та трек-номер"
+              error={errors.customerTelegram?.message}
             >
               <Input
-                type="email"
-                placeholder="you@example.com"
-                {...register("customerEmail")}
+                placeholder="Нік або номер"
+                autoComplete="username"
+                {...register("customerTelegram")}
               />
             </Field>
           </div>
