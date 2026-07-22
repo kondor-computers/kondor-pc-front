@@ -1,18 +1,16 @@
 import Link from "next/link";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 import { SpecPill } from "@/components/shared/SpecPill";
 import { PriceBlock } from "@/components/shared/PriceBlock";
 import { TechButtonDisplay } from "@/components/shared/TechButtonPrimitives";
 import { ChassisArt } from "@/components/brand/ChassisArt";
+import { CardImageCarousel } from "@/components/shared/CardImageCarousel";
 import type { Build } from "@/types/build";
 import {
   defaultBuildImageAlt,
-  resolveBuildHeroImage,
-  resolveImageAlt,
+  resolveBuildGalleryImages,
 } from "@/lib/build/images";
 import { fpsTier, FPS_TIER_META } from "@/lib/fps-thresholds";
-import { lcpImageUrl } from "@/lib/sanity/lcpImageUrl";
 
 type Variant = "compact" | "full";
 
@@ -60,7 +58,7 @@ export function BuildCardStatic({
           ? "Немає в наявності"
           : "Архів";
 
-  const heroImage = resolveBuildHeroImage(build);
+  const galleryImages = resolveBuildGalleryImages(build);
   const defaultAlt = defaultBuildImageAlt();
 
   return (
@@ -94,19 +92,14 @@ export function BuildCardStatic({
           <div className="absolute z-20 top-2 left-2 max-w-[calc(100%-1rem)] whitespace-normal font-heading text-[8px] text-black uppercase leading-tight bg-brand-primary rounded-full px-3 py-2">
             {build.shortTagline}
           </div>
-          {heroImage ? (
-            <Image
-              src={priority ? lcpImageUrl(heroImage.url) : heroImage.url}
-              alt={resolveImageAlt(heroImage, defaultAlt)}
-              fill
-              sizes="(min-width: 1024px) 380px, (min-width: 640px) 50vw, 90vw"
-              quality={priority ? 80 : undefined}
-              priority={priority}
-              className="absolute inset-0 z-10 object-cover"
-            />
-          ) : (
-            <ChassisArt className="absolute inset-0 size-full" />
-          )}
+          <ChassisArt className="absolute inset-0 size-full" />
+          <CardImageCarousel
+            images={galleryImages}
+            defaultAlt={defaultAlt}
+            sizes="(min-width: 1280px) 400px, (min-width: 768px) 33vw, (min-width: 640px) 50vw, 92vw"
+            quality={85}
+            priority={priority}
+          />
         </div>
 
         <SpecPill

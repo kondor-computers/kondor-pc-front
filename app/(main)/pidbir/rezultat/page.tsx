@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { BuildCard } from "@/components/shared/BuildCard";
+import { BuildCardStatic } from "@/components/shared/BuildCardStatic";
 import {
   parseBudget,
   parseGames,
@@ -112,7 +112,7 @@ export default async function ResultPage({
             {r.badge && (
               <BadgePill badge={r.badge} />
             )}
-            <BuildCard
+            <BuildCardStatic
               build={r.build}
               variant="full"
               gameLabels={gameLabels}
@@ -154,7 +154,7 @@ export default async function ResultPage({
             {aspirational.badge && (
               <BadgePill badge={aspirational.badge} />
             )}
-            <BuildCard
+            <BuildCardStatic
               build={aspirational.build}
               variant="full"
               gameLabels={gameLabels}
