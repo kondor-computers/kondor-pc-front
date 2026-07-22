@@ -3,6 +3,10 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   images: {
     formats: ["image/webp"],
+    // Quality values passed via the `quality` prop must be allow-listed here.
+    // Next.js 16 makes this required — an unlisted value falls back to 75,
+    // which would silently soften the build/hero card photos again.
+    qualities: [75, 80, 85, 90],
     remotePatterns: [
       // Steam CDN — game headers (free, stable, CDN-backed)
       { protocol: "https", hostname: "cdn.cloudflare.steamstatic.com" },

@@ -10,6 +10,12 @@ import { ASSEMBLY_VIDEO_POSTER_FALLBACK_ALT, resolveImageAlt } from "@/lib/build
 import { lockBodyScroll } from "@/lib/bodyScrollLock";
 import { cn } from "@/lib/utils";
 
+// Load the lightbox stylesheet with the gallery chunk (this module is itself
+// lazy-loaded on the product page), so styles are present *before* the first
+// open. Importing it lazily on open let the lightbox paint unstyled while its
+// CSS chunk was still in flight — a one-time flash on slow connections.
+import "yet-another-react-lightbox/styles.css";
+
 const Lightbox = dynamic(() => import("yet-another-react-lightbox"), {
   ssr: false,
 });
@@ -79,13 +85,6 @@ export function ProductGallery({
 
   const [index, setIndex] = useState(0);
   const [lightboxOpen, setLightboxOpen] = useState(false);
-
-  useEffect(() => {
-    if (!lightboxOpen) return;
-    void import("yet-another-react-lightbox/styles.css");
-    void import("yet-another-react-lightbox/plugins/thumbnails.css");
-    void import("yet-another-react-lightbox/plugins/counter.css");
-  }, [lightboxOpen]);
 
   useEffect(() => {
     if (!lightboxOpen) return;
