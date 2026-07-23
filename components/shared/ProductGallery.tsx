@@ -324,10 +324,28 @@ export function ProductGallery({
               },
         )}
         render={{
-          slide: ({ slide }) => {
+          slide: ({ slide, offset }) => {
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const s = slide as any;
             if (s.type !== "video") return undefined;
+
+            // The carousel preloads adjacent slides (finite: false makes the
+            // video a neighbour of the first/last photo). Only the active
+            // slide gets a live player — otherwise the video autoplays in the
+            // background the moment the gallery opens.
+            if (offset !== 0) {
+              return (
+                <div
+                  className="aspect-video w-full max-w-5xl rounded-lg bg-black bg-contain bg-center bg-no-repeat"
+                  style={
+                    s.poster
+                      ? { backgroundImage: `url(${s.poster})` }
+                      : undefined
+                  }
+                />
+              );
+            }
+
             if (s.isYouTube && s.youTubeId) {
               return (
                 <div className="relative aspect-video w-full max-w-5xl">
