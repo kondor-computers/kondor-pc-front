@@ -8,6 +8,12 @@ import { lockBodyScroll } from "@/lib/bodyScrollLock";
 import { cn } from "@/lib/utils";
 import { useCatalogDetail } from "./CatalogDetailProvider";
 
+// Load the lightbox stylesheet with this (already lazy) gallery chunk, so
+// styles are present before the first open. Importing it lazily on open let
+// the lightbox mount unstyled at the end of <body> while its CSS was still in
+// flight, and the focus trap scrolled the page down to it.
+import "yet-another-react-lightbox/styles.css";
+
 const Lightbox = dynamic(() => import("yet-another-react-lightbox"), {
   ssr: false,
 });
@@ -32,11 +38,6 @@ export function CatalogGalleryOverlay() {
 
   useEffect(() => {
     if (!lightboxOpen) return;
-    void import("yet-another-react-lightbox/styles.css");
-  }, [lightboxOpen]);
-
-  useEffect(() => {
-    if (!lightboxOpen) return;
     return lockBodyScroll();
   }, [lightboxOpen]);
 
@@ -46,7 +47,11 @@ export function CatalogGalleryOverlay() {
     <div className="contents">
       <div
         className={cn(
-          "group absolute inset-x-0 top-0 z-10 aspect-square overflow-hidden rounded-md",
+          // `absolute!` must win over `.card-frame-md`, which sets
+          // `position: relative` — otherwise the stage drops out of its
+          // overlay into normal flow and stacks below the server LCP image
+          // (visible after viewing any non-first photo / closing the lightbox).
+          "group absolute! inset-x-0 top-0 z-10 aspect-square overflow-hidden rounded-md",
           !deferStageMedia && "card-frame-md bg-surface/40",
         )}
       >
