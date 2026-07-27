@@ -5,8 +5,10 @@ import localFont from "next/font/local";
 import "./globals.css";
 
 const GTM_ID = "GTM-KWHVVR26";
+import { Suspense } from "react";
 import { LazyCartDrawer } from "@/components/cart/LazyCartDrawer";
 import { LazyScrollToTop } from "@/components/shared/LazyScrollToTop";
+import { ScrollTopOnNavigate } from "@/components/shared/ScrollTopOnNavigate";
 
 const montserrat = Montserrat({
   variable: "--font-body",
@@ -76,6 +78,9 @@ export default function RootLayout({
     >
       <body>
         <GoogleTagManager gtmId={GTM_ID} />
+        <Suspense fallback={null}>
+          <ScrollTopOnNavigate />
+        </Suspense>
         {children}
         <LazyCartDrawer />
         <LazyScrollToTop />
