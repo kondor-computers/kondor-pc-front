@@ -42,10 +42,38 @@ export interface CatalogProductListItem {
   priceDiscount?: number;
   newItem?: boolean;
   preorder?: boolean;
+  /** Homepage-only teaser flag — excluded from the catalog listing (see `ALL_ITEMS`). */
+  showonmain?: boolean;
   badge?: CatalogBadge;
+  /**
+   * Resolved category — prefers the category doc whose `items[]` array
+   * references this item, falls back to the item's own (unreliable) `cat`
+   * field. See `resolveCatalogItems` in `lib/catalog/fromCategories.ts`.
+   */
   category?: { name: string; slug: string };
+  /**
+   * Raw fallback signal from the item's own `cat` field — only present on
+   * the un-resolved shape returned by `ALL_ITEMS`; consumers should read
+   * `category` instead (set by `resolveCatalogItems`).
+   */
+  legacyCategory?: { name: string; slug: string };
   heroImage?: SanityImageRef;
   colors?: CatalogColorDot[];
+}
+
+/**
+ * Raw shape of `CATEGORIES_WITH_ITEM_IDS` — a category document with just
+ * the reference ids of its linked products (cheap lookup table). This is
+ * the authoritative category ↔ product relationship; see
+ * `lib/catalog/fromCategories.ts`.
+ */
+export interface CategoryItemLinks {
+  id: string;
+  name: string;
+  slug: string;
+  pos: number;
+  image?: SanityImageRef;
+  itemIds: (string | null)[];
 }
 
 /**

@@ -11,7 +11,19 @@ const groq = (strings: TemplateStringsArray, ...values: unknown[]) =>
     "",
   );
 
-/** Minimal projection shared across listings — keeps payload small. */
+/**
+ * Minimal projection shared across listings — keeps payload small.
+ *
+ * `legacyCategory` is the per-item `cat` reference — kept only as a
+ * *fallback* signal. It exists in the schema but is NOT reliably kept in
+ * sync by editors (e.g. the "Kondor Legion PRO" keyboard has `cat` empty).
+ * The primary category ↔ product relationship is authored the other way
+ * around — via the `items[]` array on the *category* document, same as on
+ * the sister site built from this admin (see `CATEGORIES_WITH_ITEM_IDS` /
+ * `resolveCatalogItems` in lib/catalog/fromCategories.ts). We still fall
+ * back to `legacyCategory` for items an editor never added to any
+ * category's `items[]`, so nothing that used to be visible disappears.
+ */
 const LISTING_PROJECTION = `
   "id": _id,
   "slug": slug,
@@ -20,9 +32,10 @@ const LISTING_PROJECTION = `
   price,
   priceDiscount,
   "badge": badge->{text, "hex": backgroundColor.hex},
-  "category": cat->{name, slug},
   newItem,
   preorder,
+  showonmain,
+  "legacyCategory": cat->{name, slug},
   "heroImage": coloropts[0].photos[0],
   "colors": coloropts[]{
     code,
@@ -32,7 +45,12 @@ const LISTING_PROJECTION = `
   }
 `;
 
-/** Full projection for a single product detail. */
+/**
+ * Full projection for a single product detail.
+ * `category` prefers the reverse lookup (category doc whose `items[]`
+ * references this item) and falls back to the item's own `cat` field —
+ * same priority as the listing (see LISTING_PROJECTION comment).
+ */
 const DETAIL_PROJECTION = `
   "id": _id,
   "slug": slug,
@@ -51,7 +69,10 @@ const DETAIL_PROJECTION = `
   driver,
   video,
   "badge": badge->{text, "hex": backgroundColor.hex},
-  "category": cat->{name, slug},
+  "category": coalesce(
+    *[_type == "category" && references(^._id)][0]{name, slug},
+    cat->{name, slug}
+  ),
   coloropts[]{
     code,
     color,
@@ -69,21 +90,29 @@ const DETAIL_PROJECTION = `
 //  Queries
 // ──────────────────────────────────────────────────────────────
 
-export const ALL_CATEGORIES = groq`
+/**
+ * Category list with just the `items[]` reference ids — cheap lookup table
+ * used to build the authoritative itemId → category map. See
+ * `resolveCatalogItems` in lib/catalog/fromCategories.ts.
+ */
+export const CATEGORIES_WITH_ITEM_IDS = groq`
 *[_type == "category"] | order(pos asc) {
   "id": _id,
   name,
   slug,
   pos,
   "image": image{..., "alt": alt},
-  "itemsCount": count(*[_type == "item" && cat._ref == ^._id])
+  "itemIds": items[]._ref
 }
 `;
 
-/** All items in the catalog, optionally filtered by category slugs. */
-export const CATALOG_ITEMS = groq`
-*[_type == "item" && (count($categorySlugs) == 0 || cat->slug in $categorySlugs)]
-  | order(newItem desc, _createdAt desc) {
+/**
+ * All catalog items (excludes `showonmain` homepage-only teasers — see
+ * LISTING_PROJECTION note on legacyCategory for why those can otherwise
+ * collide with a real product).
+ */
+export const ALL_ITEMS = groq`
+*[_type == "item" && showonmain != true] | order(newItem desc, _createdAt desc) {
   ${LISTING_PROJECTION}
 }
 `;
@@ -92,13 +121,6 @@ export const CATALOG_ITEMS = groq`
 export const ITEM_BY_SLUG = groq`
 *[_type == "item" && slug == $slug][0] {
   ${DETAIL_PROJECTION}
-}
-`;
-
-/** Similar products in same category (excluding self). */
-export const SIMILAR_ITEMS = groq`
-*[_type == "item" && cat->slug == $categorySlug && slug != $slug][0...6] {
-  ${LISTING_PROJECTION}
 }
 `;
 
