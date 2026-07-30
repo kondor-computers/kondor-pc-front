@@ -25,11 +25,11 @@ export function IncludedFeaturesBlock({
 
   return (
     <ul className="grid gap-3 sm:grid-cols-2">
-      {benefits.map((benefit) => {
+      {benefits.map((benefit, index) => {
         const Icon = iconFor(benefit.key);
         return (
           <li
-            key={benefit.key}
+            key={`${benefit.key}-${index}`}
             className="flex items-start gap-3 rounded-md border border-border bg-surface p-4"
           >
             <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-md bg-background ring-1 ring-inset ring-white/5">

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowRight } from "lucide-react";
-import { TechButtonDisplay } from "@/components/shared/TechButtonPrimitives";
+import { CatalogCardBuyButton } from "@/components/catalog/CatalogCardBuyButton";
 import { formatPrice } from "@/lib/format";
 import { urlFor } from "@/lib/sanity/image";
 import { cn } from "@/lib/utils";
@@ -16,7 +16,11 @@ function imageUrl(source: SanityImageRef | undefined, size: number) {
     : undefined;
 }
 
-/** Server-rendered accessory card — no cart / swatch JS on the listing. */
+/**
+ * Server-rendered accessory card — no swatch-picker JS on the listing.
+ * The "Купити" CTA is a tiny client island (`CatalogCardBuyButton`) that
+ * adds the default variant straight to the cart.
+ */
 export function CatalogCardStatic({
   group,
   priority = false,
@@ -29,6 +33,7 @@ export function CatalogCardStatic({
   const variant = group.variants[0];
   const heroImage = variant.heroImage;
   const heroUrl = imageUrl(heroImage, 640);
+  const thumbUrl = imageUrl(heroImage, 240);
 
   const hasDiscount =
     typeof variant.priceDiscount === "number" &&
@@ -124,13 +129,12 @@ className="object-cover"
               </div>
             )}
           </div>
-          <TechButtonDisplay
-            size="sm"
-            variant="inverse"
+          <CatalogCardBuyButton
+            variant={variant}
+            finalPrice={finalPrice}
+            thumbUrl={thumbUrl}
             className="w-full h-9 font-heading tracking-normal"
-          >
-            {variant.preorder ? "Передзамовити" : "Купити"}
-          </TechButtonDisplay>
+          />
           <Link
             href={detailHref}
             className="group/more flex items-center justify-center gap-1 py-1 text-[11px] font-medium uppercase tracking-wider text-muted-foreground transition hover:text-foreground"
