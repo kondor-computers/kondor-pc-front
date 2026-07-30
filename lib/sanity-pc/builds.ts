@@ -673,11 +673,14 @@ function mapReviews(
 
 function mapBenefits(rows?: RawBuildBenefit[]): BuildBenefit[] {
   if (!rows?.length) return [];
+  const seenKeys = new Set<string>();
   return rows
     .map((row) => {
       const key = row.key?.trim();
       const title = row.title?.trim();
       if (!key || !title) return null;
+      if (seenKeys.has(key)) return null;
+      seenKeys.add(key);
       const description = row.description?.trim();
       return {
         key,
