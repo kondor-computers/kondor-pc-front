@@ -44,55 +44,68 @@ export function CatalogGalleryOverlay() {
 
   return (
     <div className="contents">
-      <div
-        className={cn(
-          "group absolute inset-x-0 top-0 z-10 aspect-square overflow-hidden rounded-md",
-          !deferStageMedia && "card-frame-md bg-surface/40",
-        )}
-      >
-        {activePhoto && !deferStageMedia ? (
-          <Image
-            key={activePhoto.main}
-            src={activePhoto.main}
-            alt={activePhoto.alt || item.name}
-            fill
-            sizes="(min-width: 1024px) 640px, 90vw"
-            className="absolute inset-0 object-cover"
-          />
-        ) : null}
-
-        {activePhoto && (
-          <>
-            <button
-              type="button"
-              onClick={() => setLightboxOpen(true)}
-              aria-label="Відкрити на весь екран"
-              className="absolute inset-0 z-[5] cursor-zoom-in"
+      {/*
+        Positioning (`absolute inset-x-0 top-0`) lives on this outer div only.
+        `.card-frame-md` sets `position: relative` on itself, and — being a
+        plain rule that compiles after Tailwind's own utilities in the same
+        layer — would win the cascade over an `absolute` on the *same*
+        element, turning the stage into a normal flow box that renders below
+        the hero image instead of overlaying it (this is what ProductGallery,
+        used on the game-build page, avoids by never pairing `absolute` with
+        a class that also sets `position`). Keeping the card-frame styling on
+        a separate inner element sidesteps the conflict entirely.
+      */}
+      <div className="group absolute inset-x-0 top-0 z-10 aspect-square overflow-hidden rounded-md">
+        <div
+          className={cn(
+            "relative size-full",
+            !deferStageMedia && "card-frame-md bg-surface/40",
+          )}
+        >
+          {activePhoto && !deferStageMedia ? (
+            <Image
+              key={activePhoto.main}
+              src={activePhoto.main}
+              alt={activePhoto.alt || item.name}
+              fill
+              sizes="(min-width: 1024px) 640px, 90vw"
+              className="absolute inset-0 object-cover"
             />
-            <div className="pointer-events-none absolute right-4 bottom-4 z-[6] flex size-8 items-center justify-center rounded-full border border-white/15 bg-background/70 opacity-70 backdrop-blur transition-opacity duration-300 group-hover:opacity-100">
-              <Expand className="size-3.5" strokeWidth={2} />
-            </div>
-          </>
-        )}
+          ) : null}
 
-        {hasDiscount && (
-          <span className="absolute left-4 top-4 z-10 rounded-sm bg-foreground px-2 py-0.5 text-xs font-bold text-background">
-            −{discountPct}%
-          </span>
-        )}
-        {item.badge && (
-          <span
-            className="absolute right-4 top-4 z-10 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-black"
-            style={{ background: badgeAccent || "#ffc857" }}
-          >
-            {item.badge.text}
-          </span>
-        )}
-        {hasMany && (
-          <div className="tabular pointer-events-none absolute bottom-4 left-4 z-10 rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-medium backdrop-blur">
-            {photoIdx + 1} / {photos.length}
-          </div>
-        )}
+          {activePhoto && (
+            <>
+              <button
+                type="button"
+                onClick={() => setLightboxOpen(true)}
+                aria-label="Відкрити на весь екран"
+                className="absolute inset-0 z-[5] cursor-zoom-in"
+              />
+              <div className="pointer-events-none absolute right-4 bottom-4 z-[6] flex size-8 items-center justify-center rounded-full border border-white/15 bg-background/70 opacity-70 backdrop-blur transition-opacity duration-300 group-hover:opacity-100">
+                <Expand className="size-3.5" strokeWidth={2} />
+              </div>
+            </>
+          )}
+
+          {hasDiscount && (
+            <span className="absolute left-4 top-4 z-10 rounded-sm bg-foreground px-2 py-0.5 text-xs font-bold text-background">
+              −{discountPct}%
+            </span>
+          )}
+          {item.badge && (
+            <span
+              className="absolute right-4 top-4 z-10 rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-black"
+              style={{ background: badgeAccent || "#ffc857" }}
+            >
+              {item.badge.text}
+            </span>
+          )}
+          {hasMany && (
+            <div className="tabular pointer-events-none absolute bottom-4 left-4 z-10 rounded-full bg-background/70 px-2.5 py-1 text-[11px] font-medium backdrop-blur">
+              {photoIdx + 1} / {photos.length}
+            </div>
+          )}
+        </div>
       </div>
 
       {hasMany && (
