@@ -63,6 +63,8 @@ export default async function CatalogPage({
   );
   const gameShortLabels = makeGameShortLabelMap(games);
   const highlightGames = highlightGamesForFilters(filters);
+  const fpsResolution =
+    filters.resolution !== "all" ? filters.resolution : undefined;
   const isFiltered = hasSeoFilterParams(params);
   const catalogSeo = isFiltered
     ? null
@@ -167,6 +169,7 @@ className="object-cover"
                     gameLabels={gameLabels}
                     gameShortLabels={gameShortLabels}
                     highlightGames={highlightGames}
+                    fpsResolution={fpsResolution}
                     priority={i < 2}
                   />
                 ))}
