@@ -5,7 +5,7 @@ import { PriceBlock } from "@/components/shared/PriceBlock";
 import { TechButtonDisplay } from "@/components/shared/TechButtonPrimitives";
 import { ChassisArt } from "@/components/brand/ChassisArt";
 import { CardImageCarousel } from "@/components/shared/CardImageCarousel";
-import type { Build } from "@/types/build";
+import type { Build, Resolution } from "@/types/build";
 import {
   defaultBuildImageAlt,
   resolveBuildGalleryImages,
@@ -36,6 +36,7 @@ export function BuildCardStatic({
   highlightGames,
   gameLabels,
   gameShortLabels,
+  fpsResolution,
   badge,
   priority = false,
   className,
@@ -45,6 +46,8 @@ export function BuildCardStatic({
   highlightGames?: string[];
   gameLabels?: Record<string, string>;
   gameShortLabels?: Record<string, string>;
+  /** Роздільна здатність для відображення FPS у картці (напр. з фільтра каталогу). За замовчуванням — build.targetResolution. */
+  fpsResolution?: Resolution;
   badge?: string;
   priority?: boolean;
   className?: string;
@@ -60,6 +63,7 @@ export function BuildCardStatic({
 
   const galleryImages = resolveBuildGalleryImages(build);
   const defaultAlt = defaultBuildImageAlt();
+  const displayResolution = fpsResolution ?? build.targetResolution;
 
   return (
     <Link
@@ -114,13 +118,11 @@ export function BuildCardStatic({
         {variant === "full" && highlightGames && highlightGames.length > 0 && (
           <div className="tabular space-y-1.5 rounded-md border border-border bg-background/40 py-3 px-1.5">
             <div className="mb-1 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              У твоїх іграх · {RESOLUTION_LABEL[build.targetResolution]}
+              У твоїх іграх · {RESOLUTION_LABEL[displayResolution]}
             </div>
             {highlightGames.slice(0, 3).map((slug) => {
               const entry = build.fps.find(
-                (f) =>
-                  f.gameSlug === slug &&
-                  f.resolution === build.targetResolution,
+                (f) => f.gameSlug === slug && f.resolution === displayResolution,
               );
               if (!entry) return null;
               const tier = fpsTier(entry.fpsAvg);
