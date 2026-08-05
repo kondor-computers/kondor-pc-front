@@ -7,6 +7,14 @@ const nextConfig: NextConfig = {
     // Next.js 16 makes this required — an unlisted value falls back to 75,
     // which would silently soften the build/hero card photos again.
     qualities: [75, 80, 85, 90],
+    // Custom loader routes `if6dzz62` Sanity images (builds/blog/landings —
+    // the bulk of traffic) straight to Sanity's own CDN transform, bypassing
+    // Vercel's Image Optimization quota that was causing 402 errors. Every
+    // other source (Steam, Unsplash, the `qmszlzqu` accessories project,
+    // local assets) falls back to the stock `/_next/image` behavior inside
+    // the loader itself, so `remotePatterns` below still applies to them.
+    loader: "custom",
+    loaderFile: "./lib/sanity/imageLoader.ts",
     remotePatterns: [
       // Steam CDN — game headers (free, stable, CDN-backed)
       { protocol: "https", hostname: "cdn.cloudflare.steamstatic.com" },
