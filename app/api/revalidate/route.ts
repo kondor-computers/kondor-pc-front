@@ -93,8 +93,17 @@ type PathTarget = { path: string; type?: "page" | "layout" };
  * edge cache for statically-generated (`generateStaticParams`) routes — the
  * Sanity API itself was already fresh, but `/pk/[slug]` kept serving the old
  * value. `revalidatePath` purges the Full Route Cache directly for the given
- * path (or, with `type: "page"`, for *every* param of a dynamic route), so we
- * use it as the primary mechanism and keep tags as a secondary safety net.
+ * path.
+ *
+ * IMPORTANT: passing the *route pattern* with `type: "page"` (e.g.
+ * `"/pk/[slug]"`) busts **every** param of that dynamic route — one webhook
+ * event then counts as N ISR writes (N = number of builds/items/articles).
+ * That is what blew up the Vercel ISR Write Units budget. Whenever the
+ * payload gives us the concrete `slug`, we revalidate only that one concrete
+ * path instead; the segment-wide sweep is kept solely as a fallback for the
+ * rare case where the slug is unknown (e.g. delete events without a slug in
+ * the projection) or where a change genuinely affects every page in the
+ * segment.
  */
 function pathsForDocument(doc: WebhookPayload): PathTarget[] {
   const paths: PathTarget[] = [];
@@ -103,7 +112,11 @@ function pathsForDocument(doc: WebhookPayload): PathTarget[] {
   switch (_type) {
     case "item":
       paths.push({ path: "/catalog", type: "page" });
-      paths.push({ path: "/catalog/[slug]", type: "page" });
+      if (slug) {
+        paths.push({ path: `/catalog/${slug}` });
+      } else {
+        paths.push({ path: "/catalog/[slug]", type: "page" });
+      }
       break;
     case "category":
       paths.push({ path: "/catalog", type: "page" });
@@ -111,19 +124,34 @@ function pathsForDocument(doc: WebhookPayload): PathTarget[] {
     case "build":
       paths.push({ path: "/", type: "page" });
       paths.push({ path: "/pk", type: "page" });
-      paths.push({ path: "/pk/[slug]", type: "page" });
+      if (slug) {
+        paths.push({ path: `/pk/${slug}` });
+      } else {
+        paths.push({ path: "/pk/[slug]", type: "page" });
+      }
       break;
     case "game":
+      // A game's FPS numbers can appear on any build's configurator table,
+      // so this one genuinely needs the full sweep. Game edits should be
+      // infrequent — if they aren't, revisit this.
       paths.push({ path: "/pk", type: "page" });
       paths.push({ path: "/pk/[slug]", type: "page" });
       paths.push({ path: "/pidbir", type: "page" });
       break;
     case "page":
-      if (pathPrefix) paths.push({ path: `/${pathPrefix}/[slug]`, type: "page" });
+      if (pathPrefix && slug) {
+        paths.push({ path: `/${pathPrefix}/${slug}` });
+      } else if (pathPrefix) {
+        paths.push({ path: `/${pathPrefix}/[slug]`, type: "page" });
+      }
       break;
     case "blogPost":
       paths.push({ path: "/blog", type: "page" });
-      paths.push({ path: "/blog/[article]", type: "page" });
+      if (slug) {
+        paths.push({ path: `/blog/${slug}` });
+      } else {
+        paths.push({ path: "/blog/[article]", type: "page" });
+      }
       break;
     case "blogPage":
       paths.push({ path: "/blog", type: "page" });
@@ -190,6 +218,17 @@ export async function POST(req: NextRequest) {
       { revalidated: false, message: "Invalid JSON body" },
       { status: 400 },
     );
+  }
+
+  // Studio autosaves a draft on nearly every keystroke. If the Sanity
+  // webhook filter isn't restricted to published documents, each of those
+  // autosaves fires this endpoint and burns ISR Write Units for no reason —
+  // guard against it here regardless of the dashboard filter configuration.
+  if (payload._id?.startsWith("drafts.")) {
+    return NextResponse.json({
+      revalidated: false,
+      message: "Skipped draft document",
+    });
   }
 
   const tags = tagsForDocument(payload);
