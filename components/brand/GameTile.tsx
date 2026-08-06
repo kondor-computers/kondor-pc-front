@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { cn } from "@/lib/utils";
 
 interface GameStyle {
@@ -72,7 +72,7 @@ export function GameTile({
       >
         {coverImageUrl && (
           <>
-            <Image
+            <SanityImage
               src={coverImageUrl}
               alt={ukrName || name}
               fill
@@ -130,7 +130,7 @@ className="object-cover transition-transform duration-500 ease-out group-hover:s
     >
       {/* Cover image backdrop (preferred) */}
       {withCover && (
-        <Image
+        <SanityImage
           src={coverImageUrl!}
           alt=""
           fill

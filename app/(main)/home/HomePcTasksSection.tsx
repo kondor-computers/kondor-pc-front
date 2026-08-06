@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SectionHeader } from "@/components/shared/SectionHeader";
 import { Reveal } from "@/components/shared/Reveal";
 import ArrowIcon from "@/components/icons/ArrowIcon";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { getHomePcTasks } from "@/lib/sanity/homePcTasksSection";
 
 export async function HomePcTasksSection() {
@@ -105,7 +106,7 @@ export async function HomePcTasksSection() {
                 className="group relative flex items-center gap-4 overflow-hidden rounded-lg border border-border bg-surface p-5 transition-all duration-300 ease-out hover:-translate-y-0.5 hover:border-white/15"
               >
                 <div className="relative flex size-10 shrink-0 items-center justify-center rounded-md bg-background ring-1 ring-inset ring-white/5">
-                  <Image
+                  <SanityImage
                     src={task.iconUrl}
                     alt=""
                     width={20}

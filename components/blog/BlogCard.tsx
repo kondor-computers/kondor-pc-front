@@ -1,7 +1,7 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { BlogPostPreview } from "@/types/blogPost";
 import { contentImageUrl } from "@/lib/sanity/contentClient";
+import { SanityImage } from "@/components/shared/SanityImage";
 
 interface BlogCardProps {
   post: BlogPostPreview;
@@ -17,7 +17,7 @@ export default function BlogCard({ post }: BlogCardProps) {
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden">
         {heroMobileImage?.asset ? (
-          <Image
+          <SanityImage
             src={contentImageUrl(heroMobileImage).width(800).auto("format").url()}
             fill
             alt={heroMobileImage?.alt || heroTitle}

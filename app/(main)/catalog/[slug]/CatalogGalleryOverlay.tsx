@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import { Expand } from "lucide-react";
 import { lockBodyScroll } from "@/lib/bodyScrollLock";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { cn } from "@/lib/utils";
 import { useCatalogDetail } from "./CatalogDetailProvider";
 
@@ -63,7 +63,7 @@ export function CatalogGalleryOverlay() {
           )}
         >
           {activePhoto && !deferStageMedia ? (
-            <Image
+            <SanityImage
               key={activePhoto.main}
               src={activePhoto.main}
               alt={activePhoto.alt || item.name}
@@ -126,7 +126,7 @@ export function CatalogGalleryOverlay() {
                     : "border-border opacity-70 hover:border-white/25 hover:opacity-100",
                 )}
               >
-                <Image
+                <SanityImage
                   src={u.thumb}
                   alt=""
                   fill

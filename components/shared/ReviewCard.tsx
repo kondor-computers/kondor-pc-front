@@ -2,7 +2,7 @@ import { Star } from "lucide-react";
 import type { Review } from "@/types/build";
 import { resolveImageAlt } from "@/lib/build/images";
 import { cn } from "@/lib/utils";
-import Image from "next/image";
+import { SanityImage } from "@/components/shared/SanityImage";
 
 const PLATFORM_LABEL: Record<Review["sourcePlatform"], string> = {
   google: "Google Maps",
@@ -23,7 +23,7 @@ export function ReviewCard({
       className={cn("card-frame-md flex h-full flex-col gap-4 p-5", className)}
     >
       <div className="relative w-full aspect-[290/146]">
-        <Image
+        <SanityImage
           src={review.image.url}
           alt={resolveImageAlt(review.image, review.authorName)}
           fill

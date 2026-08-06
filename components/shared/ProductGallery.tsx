@@ -1,6 +1,5 @@
 "use client";
 
-import Image from "next/image";
 import dynamic from "next/dynamic";
 import { ChevronLeft, ChevronRight, Play } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -8,6 +7,7 @@ import { ChassisArt } from "@/components/brand/ChassisArt";
 import type { BuildImage } from "@/types/build";
 import { ASSEMBLY_VIDEO_POSTER_FALLBACK_ALT, resolveImageAlt } from "@/lib/build/images";
 import { lockBodyScroll } from "@/lib/bodyScrollLock";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { cn } from "@/lib/utils";
 
 // Load the lightbox stylesheet with the gallery chunk (this module is itself
@@ -171,7 +171,7 @@ export function ProductGallery({
         )}
 
         {current?.kind === "image" && !deferStageMedia ? (
-          <Image
+          <SanityImage
             key={current.src}
             src={current.src}
             alt={current.alt}
@@ -261,7 +261,7 @@ export function ProductGallery({
               )}
             >
               {slide.kind === "image" ? (
-                <Image
+                <SanityImage
                   src={slide.src}
                   alt=""
                   fill
@@ -272,7 +272,7 @@ export function ProductGallery({
                 <>
                   <ChassisArt compact className="absolute inset-0 size-full" />
                   {slide.poster && (
-                    <Image
+                    <SanityImage
                       src={slide.poster}
                       alt=""
                       fill
@@ -382,7 +382,7 @@ function VideoStage({
     >
       <ChassisArt className="absolute inset-0 size-full" />
       {slide.poster && (
-        <Image
+        <SanityImage
           src={slide.poster}
           alt={visible ? (slide.posterAlt ?? "") : ""}
           fill

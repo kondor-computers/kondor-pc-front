@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import { Play } from "lucide-react";
 import { useState } from "react";
 import type { BuildImage } from "@/types/build";
 import { GAMEPLAY_VIDEO_POSTER_FALLBACK_ALT, resolveImageAlt } from "@/lib/build/images";
+import { SanityImage } from "@/components/shared/SanityImage";
 
 function detectYouTubeId(url: string): string | null {
   const m = url.match(
@@ -55,7 +55,7 @@ export function BuildGameplayVideo({
         ) : (
           <>
             {posterUrl ? (
-              <Image
+              <SanityImage
                 src={posterUrl}
                 alt={posterAlt}
                 fill

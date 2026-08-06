@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useMemo, useState } from "react";
 import { ArrowRight, Check, ChevronLeft, ChevronRight } from "lucide-react";
 import { TechButton } from "@/components/shared/TechButton";
@@ -9,6 +8,7 @@ import {
   AddToCartAnimation,
   FLY_DURATION_MS,
 } from "@/components/cart/AddToCartAnimation";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { useCartStore } from "@/lib/cartStore";
 import { formatPrice } from "@/lib/format";
 import { urlFor } from "@/lib/sanity/image";
@@ -241,7 +241,7 @@ export function CatalogCard({
           className="relative block aspect-square overflow-hidden"
         >
           {heroUrl ? (
-            <Image
+            <SanityImage
               key={heroUrl}
               src={heroUrl}
               alt={displayImage?.alt || activeVariant.name}

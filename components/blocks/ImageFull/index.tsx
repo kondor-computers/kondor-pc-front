@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SanityImage } from "@/components/shared/SanityImage";
 import type {ImageAsset} from "@/lib/data/types/content";
 
 type AspectRatio = "16/9" | "21/9" | "4/3" | "1/1";
@@ -26,7 +26,7 @@ export function ImageFull({
           className={`relative w-full overflow-hidden clip-angular-12 border border-border bg-surface ${ASPECT_CLASS[aspectRatio]}`}
         >
           {image?.src ? (
-            <Image
+            <SanityImage
               src={image.src}
               alt={image.alt}
               fill

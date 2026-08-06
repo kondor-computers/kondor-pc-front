@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { Play } from "lucide-react";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { urlFor } from "@/lib/sanity/image";
 import type { CatalogProductDetail } from "@/types/catalog";
 
@@ -75,7 +75,7 @@ export function CatalogDetailSections({ item }: { item: CatalogProductDetail }) 
                         >
                           <div className="relative flex size-8 shrink-0 items-center justify-center">
                             {iconUrl ? (
-                              <Image
+                              <SanityImage
                                 src={iconUrl}
                                 alt=""
                                 width={28}

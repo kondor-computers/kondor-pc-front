@@ -1,6 +1,6 @@
-import Image from "next/image";
 import { RichContent } from "@/components/blocks/RichContent";
 import { TechButtonLink } from "@/components/shared/TechButtonPrimitives";
+import { SanityImage } from "@/components/shared/SanityImage";
 import type { ContentNode, ImageAsset } from "@/lib/data/types/content";
 import { cn } from "@/lib/utils";
 
@@ -64,7 +64,7 @@ function ImagePane({ image }: { image?: ImageAsset }) {
     <figure className="relative">
       <div className="relative aspect-video w-full overflow-hidden clip-angular-12 border border-brand-primary/30 bg-surface">
         {image?.src ? (
-          <Image
+          <SanityImage
             src={image.src}
             alt={image.alt}
             fill

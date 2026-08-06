@@ -1,6 +1,6 @@
-import Image from "next/image";
 import Link from "next/link";
 import { contentImageUrl } from "@/lib/sanity/contentClient";
+import { SanityImage } from "@/components/shared/SanityImage";
 import type { LandingPagePreview } from "@/lib/sanity/landingAdapter";
 
 interface LandingCardProps {
@@ -21,7 +21,7 @@ export default function LandingCard({
     >
       <div className="relative aspect-[16/10] w-full overflow-hidden">
         {image?.asset ? (
-          <Image
+          <SanityImage
             src={contentImageUrl(image).width(800).auto("format").url()}
             fill
             alt={image?.alt || title}
