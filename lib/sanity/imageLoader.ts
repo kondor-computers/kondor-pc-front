@@ -1,39 +1,24 @@
 import type { ImageLoaderProps } from "next/image";
 
 /**
- * Bypasses Vercel's paid Image Optimization pipeline for any image hosted on
- * Sanity's CDN — both the `if6dzz62` content/builds/blog project and the
- * `qmszlzqu` accessories catalog project. Sanity's own CDN already
- * resizes/transcodes on the fly via query params, so we build that URL
- * directly instead of double-processing through `/_next/image`, which was
- * hitting Vercel's monthly optimization quota
- * (see 402 OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED).
+ * Bypasses Vercel's paid Image Optimization pipeline entirely.
  *
- * Everything else (Steam CDN, Unsplash, local `/public` assets) falls back
- * to Next's default `/_next/image` proxy, unchanged from stock behavior.
+ * IMPORTANT: once `images.loader` is set to `"custom"`, Next.js's own
+ * `/_next/image` endpoint stops serving requests (returns 404) — there is no
+ * "fall back to the default proxy" option once a custom loader is
+ * configured. So every source this loader sees has to be resolved to a URL
+ * the browser can fetch directly, with no `/_next/image` hop anywhere.
+ *
+ * - `cdn.sanity.io` (both the `if6dzz62` content/builds/blog project and the
+ *   `qmszlzqu` accessories catalog) — build the transform URL directly
+ *   against Sanity's own CDN, which already resizes/transcodes on the fly.
+ * - `images.unsplash.com` — same idea, Unsplash's Imgix-based CDN accepts
+ *   the same `w`/`q`/`auto=format` params.
+ * - Everything else (Steam CDN headers, local `/public` assets) — served
+ *   as-is, unoptimized. Steam has no on-the-fly resize API anyway, and
+ *   local assets are small/pre-optimized, so nothing is lost.
  */
-const SANITY_HOSTNAME = "cdn.sanity.io";
-
-function defaultProxy(src: string, width: number, quality: number): string {
-  const params = new URLSearchParams({
-    url: src,
-    w: width.toString(),
-    q: quality.toString(),
-  });
-  return `/_next/image?${params.toString()}`;
-}
-
-export default function sanityAwareLoader({
-  src,
-  width,
-  quality,
-}: ImageLoaderProps): string {
-  const q = quality ?? 75;
-
-  if (!src.includes(SANITY_HOSTNAME)) {
-    return defaultProxy(src, width, q);
-  }
-
+function applyTransformParams(src: string, width: number, quality: number): string {
   const url = new URL(src);
 
   // Callers that already pinned an explicit `height` (square thumbs,
@@ -49,7 +34,21 @@ export default function sanityAwareLoader({
   if (!url.searchParams.has("auto")) {
     url.searchParams.set("auto", "format");
   }
-  url.searchParams.set("q", q.toString());
+  url.searchParams.set("q", quality.toString());
 
   return url.toString();
+}
+
+export default function sanityAwareLoader({
+  src,
+  width,
+  quality,
+}: ImageLoaderProps): string {
+  const q = quality ?? 75;
+
+  if (src.includes("cdn.sanity.io") || src.includes("images.unsplash.com")) {
+    return applyTransformParams(src, width, q);
+  }
+
+  return src;
 }
