@@ -1,7 +1,7 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { CatalogCardBuyButton } from "@/components/catalog/CatalogCardBuyButton";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { formatPrice } from "@/lib/format";
 import { urlFor } from "@/lib/sanity/image";
 import { cn } from "@/lib/utils";
@@ -62,7 +62,7 @@ export function CatalogCardStatic({
         className="relative block aspect-square overflow-hidden"
       >
         {heroUrl ? (
-          <Image
+          <SanityImage
             src={heroUrl}
             alt={heroImage?.alt || variant.name}
             fill

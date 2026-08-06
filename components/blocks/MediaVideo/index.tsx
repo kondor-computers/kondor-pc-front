@@ -1,7 +1,7 @@
 "use client";
 
 import {useState} from "react";
-import Image from "next/image";
+import { SanityImage } from "@/components/shared/SanityImage";
 import type {ImageAsset} from "@/lib/data/types/content";
 
 function detectYouTubeId(url: string): string | null {
@@ -53,7 +53,7 @@ export function MediaVideo({
           ) : (
             <>
               {posterImage?.src ? (
-                <Image
+                <SanityImage
                   src={posterImage.src}
                   alt={posterImage.alt || caption || "Відео"}
                   fill

@@ -1,10 +1,9 @@
-import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
-import { preload } from "react-dom";
 import type { BlogPost } from "@/types/blogPost";
 import { blogHeroDesktopUrl, blogHeroLcpUrl } from "@/lib/blog/heroImage";
 import { contentImageUrl } from "@/lib/sanity/contentClient";
+import { SanityImage } from "@/components/shared/SanityImage";
 
 interface HeroProps {
   article: BlogPost;
@@ -60,9 +59,6 @@ export default function ArticleHero({ article }: HeroProps) {
       : null;
 
   const lcpSrc = lcpImage ? blogHeroLcpUrl(lcpImage) : null;
-  if (lcpSrc) {
-    preload(lcpSrc, { as: "image", fetchPriority: "high" });
-  }
 
   const showDedicatedMobile =
     Boolean(heroMobileImage?.asset) && Boolean(heroDesktopImage?.asset);
@@ -70,7 +66,7 @@ export default function ArticleHero({ article }: HeroProps) {
   return (
     <section className="relative overflow-hidden border-b border-border">
       {lcpSrc && (
-        <Image
+        <SanityImage
           src={lcpSrc}
           fill
           alt={lcpImage?.alt || heroTitle}
@@ -85,14 +81,13 @@ export default function ArticleHero({ article }: HeroProps) {
         />
       )}
       {heroDesktopImage?.asset && showDedicatedMobile && (
-        <Image
+        <SanityImage
           src={blogHeroDesktopUrl(heroDesktopImage)}
           fill
           alt={heroDesktopImage?.alt || heroTitle}
           sizes="100vw"
           quality={80}
           className="-z-20 hidden object-cover md:block"
-          fetchPriority="low"
         />
       )}
       <div className="absolute inset-0 -z-10 bg-gradient-to-b from-black/40 via-black/55 to-black/85" />
@@ -103,7 +98,7 @@ export default function ArticleHero({ article }: HeroProps) {
         {author?.name && (
           <div className="mt-5 flex items-center gap-3">
             {author.photo?.asset && (
-              <Image
+              <SanityImage
                 src={contentImageUrl(author.photo)
                   .width(96)
                   .height(96)

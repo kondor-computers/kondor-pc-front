@@ -10,7 +10,7 @@ import { buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TechButton } from "@/components/shared/TechButton";
-import Image from "next/image";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { ChassisArt } from "@/components/brand/ChassisArt";
 import { SKU_ACCENTS } from "@/lib/sku-accents";
 import { getCartItemTelegramDetailLines } from "@/lib/cart/formatItemSpecification";
@@ -1030,7 +1030,7 @@ export function CheckoutView() {
                     />
                   )}
                   {imageSrc && (
-                    <Image
+                    <SanityImage
                       src={imageSrc}
                       alt=""
                       fill

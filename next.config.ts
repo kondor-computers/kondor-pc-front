@@ -7,22 +7,19 @@ const nextConfig: NextConfig = {
     // Next.js 16 makes this required — an unlisted value falls back to 75,
     // which would silently soften the build/hero card photos again.
     qualities: [75, 80, 85, 90],
-    // Custom loader routes ALL Sanity-hosted images (both `if6dzz62`
-    // builds/blog/landings and `qmszlzqu` accessories catalog) straight to
-    // Sanity's own CDN transform, bypassing Vercel's Image Optimization
-    // quota that was causing 402 errors. Every other source (Steam,
-    // Unsplash, local assets) falls back to the stock `/_next/image`
-    // behavior inside the loader itself, so `remotePatterns` below still
-    // applies to them.
-    loader: "custom",
-    loaderFile: "./lib/sanity/imageLoader.ts",
+    // No global `images.loader` override: this project's Sanity/Unsplash
+    // photography renders through `components/shared/SanityImage.tsx` (a
+    // plain `<img>` hitting those CDNs' own on-the-fly resize APIs
+    // directly), never through `next/image` at all — that's what used to
+    // exceed Vercel's metered Image Optimization quota (402
+    // OPTIMIZED_IMAGE_REQUEST_PAYMENT_REQUIRED). Every remaining
+    // `next/image` usage is local/static assets, which keep using Next's
+    // stock `/_next/image` (Vercel-optimized) pipeline as normal.
     remotePatterns: [
       // Steam CDN — game headers (free, stable, CDN-backed)
       { protocol: "https", hostname: "cdn.cloudflare.steamstatic.com" },
       { protocol: "https", hostname: "shared.fastly.steamstatic.com" },
       { protocol: "https", hostname: "cdn.akamai.steamstatic.com" },
-      // Unsplash — placeholder chassis photography (replaced when client delivers PNGs)
-      { protocol: "https", hostname: "images.unsplash.com" },
     ],
   },
   experimental: {

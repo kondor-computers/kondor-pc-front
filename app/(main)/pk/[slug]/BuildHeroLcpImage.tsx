@@ -1,4 +1,4 @@
-import Image from "next/image";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { lcpImageUrl } from "@/lib/sanity/lcpImageUrl";
 
 /** Server-rendered LCP frame — paints before ProductGallery client JS. */
@@ -14,7 +14,7 @@ export function BuildHeroLcpImage({
       className="sku-glow relative aspect-[4/3] w-full overflow-hidden rounded-lg"
       style={{ ["--sku" as string]: "var(--brand-primary)" }}
     >
-      <Image
+      <SanityImage
         src={lcpImageUrl(src)}
         alt={alt}
         fill

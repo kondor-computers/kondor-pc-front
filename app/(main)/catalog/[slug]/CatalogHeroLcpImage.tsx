@@ -1,5 +1,4 @@
-import Image from "next/image";
-import { preload } from "react-dom";
+import { SanityImage } from "@/components/shared/SanityImage";
 
 /** Server-rendered LCP frame — direct Sanity CDN, no /_next/image hop. */
 export function CatalogHeroLcpImage({
@@ -9,11 +8,9 @@ export function CatalogHeroLcpImage({
   src: string;
   alt: string;
 }) {
-  preload(src, { as: "image", fetchPriority: "high" });
-
   return (
     <div className="card-frame-md relative aspect-square w-full overflow-hidden bg-surface/40">
-      <Image
+      <SanityImage
         src={src}
         alt={alt}
         fill

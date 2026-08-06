@@ -1,8 +1,8 @@
 "use client";
 
-import Image from "next/image";
 import { useState, type MouseEvent } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { cn } from "@/lib/utils";
 import type { BuildImage } from "@/types/build";
 import { resolveImageAlt } from "@/lib/build/images";
@@ -51,7 +51,7 @@ export function CardImageCarousel({
         if (!seen.has(i)) return null;
         const visible = i === index;
         return (
-          <Image
+          <SanityImage
             key={image.url + i}
             src={image.url}
             alt={visible ? resolveImageAlt(image, defaultAlt) : ""}

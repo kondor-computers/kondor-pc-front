@@ -7,7 +7,6 @@
  * font-heading for h3, accent colour from brand-primary, body in muted-foreground.
  */
 import type { PortableTextComponents } from "@portabletext/react";
-import Image from "next/image";
 import Link from "next/link";
 import React from "react";
 import type {
@@ -18,6 +17,7 @@ import type {
 } from "@/types/blogPost";
 import { contentImageUrl } from "@/lib/sanity/contentClient";
 import { TechButtonLink } from "@/components/shared/TechButtonPrimitives";
+import { SanityImage } from "@/components/shared/SanityImage";
 
 const BLOG_CONTENT_IMAGE_SIZES =
   "(max-width: 1024px) 100vw, min(896px, calc(100vw - 8rem))";
@@ -146,7 +146,7 @@ export const getBlogPortableTextComponents = (
           key={key}
           className="my-8 w-full overflow-hidden rounded-xl border border-border bg-card"
         >
-          <Image
+          <SanityImage
             src={imageUrl}
             alt={alt}
             width={w}
@@ -174,7 +174,7 @@ export const getBlogPortableTextComponents = (
                 key={item._key}
                 className="overflow-hidden rounded-xl border border-border bg-card"
               >
-                <Image
+                <SanityImage
                   src={url}
                   alt={img.alt ?? ""}
                   width={img.dimensions?.width ?? 900}

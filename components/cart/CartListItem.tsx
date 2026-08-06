@@ -1,10 +1,10 @@
 "use client";
 
-import Image from "next/image";
 import Link from "next/link";
 import { Minus, Plus, X } from "lucide-react";
 import { motion } from "framer-motion";
 import { ChassisArt } from "@/components/brand/ChassisArt";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { SKU_ACCENTS, type SkuSlug } from "@/lib/sku-accents";
 import { formatPrice } from "@/lib/format";
 import { useCartStore, type CartItem } from "@/lib/cartStore";
@@ -73,7 +73,7 @@ export function CartListItem({
             <ChassisArt compact className="absolute inset-0 size-full" />
           )}
           {imageSrc && (
-            <Image
+            <SanityImage
               src={imageSrc}
               alt=""
               fill

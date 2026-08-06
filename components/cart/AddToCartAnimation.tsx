@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import Image from "next/image";
 import { motion } from "framer-motion";
+import { SanityImage } from "@/components/shared/SanityImage";
 
 /** Fly-to-cart duration, in milliseconds. Callers `setTimeout(add, FLY_DURATION_MS)` to add the item the moment the thumb lands. */
 export const FLY_DURATION_MS = 700;
@@ -62,7 +62,7 @@ export function AddToCartAnimation({
       transition={{ duration, ease: [0.65, 0, 0.35, 1] }}
     >
       <div className="relative h-full w-full overflow-hidden rounded-md ring-1 ring-white/20 shadow-lg">
-        <Image
+        <SanityImage
           src={image}
           alt=""
           fill

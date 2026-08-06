@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { Plus } from "lucide-react";
 import { urlFor } from "@/lib/sanity/image";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { useCartStore } from "@/lib/cartStore";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -103,7 +103,7 @@ export function CartCrossSell() {
                 className="relative block size-12 shrink-0 overflow-hidden rounded-sm"
               >
                 {thumb && (
-                  <Image
+                  <SanityImage
                     src={thumb}
                     alt=""
                     fill

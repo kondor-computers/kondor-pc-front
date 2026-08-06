@@ -1,5 +1,5 @@
-import Image from "next/image";
 import { TechButtonLink } from "@/components/shared/TechButtonPrimitives";
+import { SanityImage } from "@/components/shared/SanityImage";
 import { cn } from "@/lib/utils";
 
 type SimpleImage = { src: string; alt: string; caption?: string };
@@ -29,7 +29,7 @@ export function HeroSimple({
       {/* Background image with darkening overlay */}
       {bgImage ? (
         <>
-          <Image
+          <SanityImage
             src={bgImage.src}
             alt={bgImage.alt}
             fill
