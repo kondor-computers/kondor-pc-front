@@ -18,7 +18,7 @@ import { formatUah } from "@/lib/format";
  */
 
 const TELEGRAM_HANDLE =
-  process.env.NEXT_PUBLIC_TELEGRAM_HANDLE || "kondor_pc";
+  process.env.NEXT_PUBLIC_TELEGRAM_HANDLE || "kondor_pc_admin";
 const PHONE_DISPLAY =
   process.env.NEXT_PUBLIC_PHONE_DISPLAY || "+380 XX XXX XX XX";
 const PHONE_HREF =
