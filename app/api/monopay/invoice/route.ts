@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 
+import { sumMonopayBasketKop } from "@/lib/monopay/basket";
 import { getMonopayToken, getSiteUrl } from "@/lib/monopay/server";
 import type { MonopayInvoiceRequest } from "@/lib/monopay/types";
 
@@ -17,6 +18,21 @@ export async function POST(req: NextRequest) {
         { error: "Невалідні параметри рахунку" },
         { status: 400 },
       );
+    }
+
+    if (basketOrder?.length) {
+      const basketTotal = sumMonopayBasketKop(basketOrder);
+      if (basketTotal !== amount) {
+        console.error("[monopay/invoice] basket/amount mismatch", {
+          basketTotal,
+          amount,
+          orderNumber,
+        });
+        return NextResponse.json(
+          { error: "Сума кошика не збігається з сумою рахунку" },
+          { status: 400 },
+        );
+      }
     }
 
     const siteUrl = getSiteUrl();
