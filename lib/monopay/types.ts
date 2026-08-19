@@ -19,6 +19,8 @@ export interface MonopayInvoiceRequest {
   amount: number;
   orderNumber: string;
   basketOrder: MonopayBasket;
+  /** Сума замовлення в грн (без комісії) — для redirect URL та аналітики. */
+  orderValueUah?: number;
 }
 
 export interface MonopayInvoiceResponse {

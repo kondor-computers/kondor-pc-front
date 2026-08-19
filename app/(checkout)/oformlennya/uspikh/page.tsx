@@ -1,5 +1,12 @@
 import type { Metadata } from "next";
 import { TechButtonLink } from "@/components/shared/TechButtonPrimitives";
+import {
+  PurchaseTracker,
+  PurchaseTrackerFallback,
+} from "@/components/analytics/PurchaseTracker";
+import { getCheckoutPaymentStatus } from "@/lib/analytics/purchase";
+import type { PaymentMethod } from "@/lib/validations/order";
+import { PAYMENT_METHODS } from "@/lib/validations/order";
 import { Check } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -19,11 +26,31 @@ export default async function SuccessPage({
 }: {
   searchParams: Promise<Record<string, string | undefined>>;
 }) {
-  const { order } = await searchParams;
-  const orderNumber = order ?? "UA-XXXXXX-XXXX";
+  const params = await searchParams;
+  const orderNumber = params.order ?? "UA-XXXXXX-XXXX";
+  const paymentRaw = params.payment;
+  const paymentMethod = PAYMENT_METHODS.includes(paymentRaw as PaymentMethod)
+    ? (paymentRaw as PaymentMethod)
+    : undefined;
+  const valueUah = params.value ? Number(params.value) : undefined;
+  const resolvedValue =
+    valueUah != null && Number.isFinite(valueUah) ? valueUah : 0;
 
   return (
     <div className="container-narrow py-16 md:py-24">
+      <PurchaseTracker
+        orderNumber={orderNumber}
+        paymentMethod={paymentMethod}
+        valueUah={resolvedValue > 0 ? resolvedValue : undefined}
+      />
+      {paymentMethod && paymentMethod !== "monopay" && resolvedValue >= 0 && (
+        <PurchaseTrackerFallback
+          orderNumber={orderNumber}
+          paymentMethod={paymentMethod}
+          valueUah={resolvedValue}
+          paymentStatus={getCheckoutPaymentStatus(paymentMethod)}
+        />
+      )}
       <div className="mb-8 flex flex-col items-center text-center">
         <div className="mb-5 flex size-16 items-center justify-center rounded-full bg-brand-primary/15">
           <Check className="size-8 text-brand-primary" strokeWidth={3} />

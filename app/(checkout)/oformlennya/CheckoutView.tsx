@@ -21,6 +21,12 @@ import {
 } from "@/lib/cartStore";
 import { buildMonopayBasket } from "@/lib/monopay/basket";
 import {
+  getAnalyticsPaymentMethod,
+  getCheckoutPaymentStatus,
+  saveMonopayCheckoutSession,
+  trackPurchase,
+} from "@/lib/analytics/purchase";
+import {
   buildKeyCrmOrderPayload,
   sendOrderToKeyCrm,
 } from "@/lib/keycrm/client";
@@ -506,6 +512,7 @@ export function CheckoutView() {
           body: JSON.stringify({
             amount: payTotalUah * 100,
             orderNumber,
+            orderValueUah: payableTotal,
             basketOrder: buildMonopayBasket(cartItems, {
               discount:
                 promoDiscount > 0
@@ -522,12 +529,30 @@ export function CheckoutView() {
 
         const invoiceData = (await invoiceRes.json()) as {
           pageUrl?: string;
+          invoiceId?: string;
           error?: unknown;
         };
 
         if (!invoiceRes.ok || !invoiceData.pageUrl) {
           console.error("[checkout/monopay]", invoiceData.error);
           throw new Error("invoice failed");
+        }
+
+        trackPurchase({
+          transaction_id: orderNumber,
+          value: payableTotal,
+          currency: "UAH",
+          payment_method: getAnalyticsPaymentMethod(values.paymentMethod),
+          payment_status: "pending",
+        });
+
+        if (invoiceData.invoiceId) {
+          saveMonopayCheckoutSession({
+            invoiceId: invoiceData.invoiceId,
+            transaction_id: orderNumber,
+            value: payableTotal,
+            payment_method: getAnalyticsPaymentMethod(values.paymentMethod),
+          });
         }
 
         await sendTelegramMessage(text);
@@ -551,6 +576,14 @@ export function CheckoutView() {
         return;
       }
 
+      trackPurchase({
+        transaction_id: orderNumber,
+        value: payableTotal,
+        currency: "UAH",
+        payment_method: getAnalyticsPaymentMethod(values.paymentMethod),
+        payment_status: getCheckoutPaymentStatus(values.paymentMethod),
+      });
+
       await sendTelegramMessage(text);
 
       const keyCrmPayload = buildKeyCrmOrderPayload({
@@ -569,7 +602,7 @@ export function CheckoutView() {
 
       clear();
       router.push(
-        `/oformlennya/uspikh?order=${orderNumber}&payment=${values.paymentMethod}`,
+        `/oformlennya/uspikh?order=${encodeURIComponent(orderNumber)}&payment=${values.paymentMethod}&value=${payableTotal}`,
       );
     } catch {
       setSubmitError(true);

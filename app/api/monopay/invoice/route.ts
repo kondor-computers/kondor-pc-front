@@ -10,7 +10,7 @@ const MONOBANK_INVOICE_URL =
 export async function POST(req: NextRequest) {
   try {
     const token = getMonopayToken();
-    const { amount, orderNumber, basketOrder } =
+    const { amount, orderNumber, basketOrder, orderValueUah } =
       (await req.json()) as MonopayInvoiceRequest;
 
     if (!amount || amount < 1 || !orderNumber?.trim()) {
@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         destination: "Покупка в Kondor PC",
         comment: `Замовлення ${orderNumber}`,
       },
-      redirectUrl: `${siteUrl}/oformlennya/uspikh?order=${encodeURIComponent(orderNumber)}&payment=monopay`,
+      redirectUrl: `${siteUrl}/oformlennya/uspikh?order=${encodeURIComponent(orderNumber)}&payment=monopay${orderValueUah != null ? `&value=${orderValueUah}` : ""}`,
       webHookUrl: `${siteUrl}/api/monopay/webhook`,
       validity: 3600,
       paymentType: "debit",
