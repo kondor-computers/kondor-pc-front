@@ -497,6 +497,60 @@ export function CheckoutView() {
         : "");
 
     try {
+      if (values.paymentMethod === "monopay") {
+        const payTotalUah = Math.round(payableTotal * 1.013);
+        const commissionUah = payTotalUah - payableTotal;
+        const invoiceRes = await fetch("/api/monopay/invoice", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: payTotalUah * 100,
+            orderNumber,
+            basketOrder: buildMonopayBasket(cartItems, {
+              discount:
+                promoDiscount > 0
+                  ? {
+                      amountUah: promoDiscount,
+                      label: `Знижка (${promoForOrder!.promo.code})`,
+                      code: "promo-discount",
+                    }
+                  : undefined,
+              commissionUah,
+            }),
+          }),
+        });
+
+        const invoiceData = (await invoiceRes.json()) as {
+          pageUrl?: string;
+          error?: unknown;
+        };
+
+        if (!invoiceRes.ok || !invoiceData.pageUrl) {
+          console.error("[checkout/monopay]", invoiceData.error);
+          throw new Error("invoice failed");
+        }
+
+        await sendTelegramMessage(text);
+
+        const keyCrmPayload = buildKeyCrmOrderPayload({
+          orderNumber,
+          orderDate,
+          values,
+          cartItems,
+          promoForOrder,
+          payableTotal,
+        });
+        try {
+          await sendOrderToKeyCrm(keyCrmPayload);
+        } catch (error) {
+          console.error("[checkout/keycrm]", error);
+        }
+
+        clear();
+        window.location.href = invoiceData.pageUrl;
+        return;
+      }
+
       await sendTelegramMessage(text);
 
       const keyCrmPayload = buildKeyCrmOrderPayload({
@@ -511,41 +565,6 @@ export function CheckoutView() {
         await sendOrderToKeyCrm(keyCrmPayload);
       } catch (error) {
         console.error("[checkout/keycrm]", error);
-      }
-
-      if (values.paymentMethod === "monopay") {
-        const payTotalUah = Math.round(payableTotal * 1.013);
-        const invoiceRes = await fetch("/api/monopay/invoice", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: payTotalUah * 100,
-            orderNumber,
-            basketOrder: buildMonopayBasket(
-              cartItems,
-              promoDiscount > 0
-                ? {
-                    amountUah: promoDiscount,
-                    label: `Знижка (${promoForOrder!.promo.code})`,
-                  }
-                : undefined,
-            ),
-          }),
-        });
-
-        const invoiceData = (await invoiceRes.json()) as {
-          pageUrl?: string;
-          error?: unknown;
-        };
-
-        if (!invoiceRes.ok || !invoiceData.pageUrl) {
-          console.error("[checkout/monopay]", invoiceData.error);
-          throw new Error("invoice failed");
-        }
-
-        clear();
-        window.location.href = invoiceData.pageUrl;
-        return;
       }
 
       clear();
