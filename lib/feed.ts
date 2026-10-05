@@ -132,3 +132,57 @@ export function buildFeedPrices(build: Build): {
       }
     : { price: formatFeedPrice(build.priceUah), salePrice: null };
 }
+
+export function buildFeedItemXml(
+  build: Build,
+  baseUrl = getFeedBaseUrl(),
+): string | null {
+  const [mainImage, ...restImages] = buildFeedImageUrls(build);
+
+  // Без зображення або з нульовою ціною offer не пройде валідацію Meta.
+  if (!mainImage || !(build.priceUah > 0)) return null;
+
+  const { price, salePrice } = buildFeedPrices(build);
+
+  const fields: string[] = [
+    `<g:id>${escapeXml(buildFeedId(build))}</g:id>`,
+    `<g:title>${escapeXml(buildFeedTitle(build))}</g:title>`,
+    `<g:description>${escapeXml(buildFeedDescription(build))}</g:description>`,
+    `<g:link>${escapeXml(buildFeedLink(build, baseUrl))}</g:link>`,
+    `<g:image_link>${escapeXml(mainImage)}</g:image_link>`,
+    ...restImages
+      .slice(0, MAX_ADDITIONAL_IMAGES)
+      .map(
+        (url) => `<g:additional_image_link>${escapeXml(url)}</g:additional_image_link>`,
+      ),
+    `<g:brand>${escapeXml(BRAND)}</g:brand>`,
+    `<g:condition>new</g:condition>`,
+    `<g:availability>${buildFeedAvailability(build)}</g:availability>`,
+    `<g:price>${price}</g:price>`,
+    ...(salePrice ? [`<g:sale_price>${salePrice}</g:sale_price>`] : []),
+    `<g:product_type>${escapeXml(PRODUCT_TYPE)}</g:product_type>`,
+    `<g:google_product_category>${escapeXml(GOOGLE_PRODUCT_CATEGORY)}</g:google_product_category>`,
+  ];
+
+  return `<item>\n${fields.map((field) => `      ${field}`).join("\n")}\n    </item>`;
+}
+
+export function buildFeedXml(builds: Build[], baseUrl = getFeedBaseUrl()): string {
+  const feedUrl = `${baseUrl}/api/feed/meta`;
+  const items = builds
+    .filter(isFeedBuild)
+    .map((build) => buildFeedItemXml(build, baseUrl))
+    .filter((item): item is string => Boolean(item));
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:g="http://base.google.com/ns/1.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Kondor PC — товарний фід</title>
+    <link>${escapeXml(baseUrl)}</link>
+    <description>Динамічний фід збірок Kondor PC для Meta/Facebook Catalog</description>
+    <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />
+    ${items.join("\n    ")}
+  </channel>
+</rss>
+`;
+}
