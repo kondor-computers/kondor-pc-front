@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { TechButton } from "@/components/shared/TechButton";
 import { useCartStore } from "@/lib/cartStore";
-import { trackAddToCart } from "@/lib/analytics/ecommerce";
+import { trackAddToCart, trackStartCheckout } from "@/lib/analytics/ecommerce";
 import { useProductConfiguratorOptional } from "@/components/shared/ProductConfigurator";
 import {
   AddToCartAnimation,
@@ -97,7 +97,9 @@ export function PurchaseActions({
       sku,
       image,
     });
-    trackAddToCart({ slug, sku, name, unitPriceUah, options });
+    const analyticsItem = { slug, sku, name, unitPriceUah, options };
+    trackAddToCart(analyticsItem);
+    trackStartCheckout([analyticsItem]);
     router.push("/oformlennya");
   }
 
