@@ -10,7 +10,7 @@ GTM-контейнер підключено в `app/layout.tsx` (`NEXT_PUBLIC_GT
 |---|---|
 | `view_item` | Сторінки `/pk/[slug]` і `/catalog/[slug]` (`ViewItemTracker`) |
 | `add_to_cart` | `PurchaseActions`, `StickyMobileBuyBar`, `CatalogPurchasePanel`, `CatalogCard`, `CatalogCardBuyButton`, `CartCrossSell` |
-| `start_checkout` | Кнопка «Оформити замовлення» в `CartDrawer` |
+| `start_checkout` | Кнопка «Оформити замовлення» в `CartDrawer`; кнопки «Купити зараз» (`PurchaseActions`, `StickyMobileBuyBar`, `CatalogPurchasePanel`) — після `add_to_cart` |
 | `submit_order` | `CheckoutView` після Telegram + KeyCRM |
 
 `submit_order`: `order_number`, `value`, `items`, `user_data` (`phone`, `first_name`, `last_name`, `city`).
