@@ -65,10 +65,9 @@ export function buildFeedTitle(build: Build): string {
   return normalizeSpaces(build.name);
 }
 
+// Опис генерується зі `spec` і слогана, а не з `seo.metaDescription`: у SEO-тексті
+// з адмінки часто вказана ціна («Від 41 370 ₴»), яка може розходитись із `priceUah`.
 export function buildFeedDescription(build: Build): string {
-  const fromSeo = build.seo?.metaDescription?.trim();
-  if (fromSeo) return normalizeSpaces(fromSeo);
-
   const { cpu, gpu, gpuVram, ram, ramSpeed, storage } = build.spec;
   const gpuLabel =
     gpuVram && !gpu.toLowerCase().includes(gpuVram.toLowerCase())
