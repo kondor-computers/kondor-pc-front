@@ -132,6 +132,8 @@ export interface Build {
   status: BuildStatus;
   /** Показувати в блоці топ-3 на головній (Sanity `showInHomeTop3`). */
   showInHomeTop3?: boolean;
+  /** Показувати в товарному фіді Meta (Sanity `showInFeed`). */
+  showInFeed?: boolean;
   assemblyDays: number;
   spec: BuildSpecShort;
   components: BuildComponent[];

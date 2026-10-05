@@ -140,6 +140,7 @@ type RawBuild = {
   tier: Build["tier"];
   status: Build["status"];
   showInHomeTop3?: boolean;
+  showInFeed?: boolean;
   shortTagline: string;
   priceUah: number;
   oldPriceUah?: number;
@@ -178,6 +179,7 @@ const BUILDS_QUERY = `
   tier,
   status,
   showInHomeTop3,
+  showInFeed,
   shortTagline,
   priceUah,
   oldPriceUah,
@@ -786,6 +788,7 @@ function mapBuild(raw: RawBuild): Build {
     oldPriceUah: raw.oldPriceUah,
     status: raw.status,
     showInHomeTop3: Boolean(raw.showInHomeTop3),
+    showInFeed: Boolean(raw.showInFeed),
     assemblyDays: raw.assemblyDays,
     spec,
     components,
