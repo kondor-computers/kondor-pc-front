@@ -91,6 +91,31 @@ export function buildFeedAvailability(build: Build): FeedAvailability {
   }
 }
 
+function addBusinessDays(from: Date, days: number): Date {
+  const date = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+  let left = Math.max(1, Math.ceil(days));
+  while (left > 0) {
+    date.setUTCDate(date.getUTCDate() + 1);
+    const day = date.getUTCDay();
+    if (day !== 0 && day !== 6) left -= 1;
+  }
+  return date;
+}
+
+/**
+ * `availability_date` — обов'язковий для `availability = preorder`
+ * (Google Merchant Center відхиляє такі offer без нього). Це орієнтовна дата
+ * готовності збірки: сьогодні + `assemblyDays` робочих днів, завжди в майбутньому.
+ * Формат ISO 8601: `2026-10-12T00:00Z`.
+ */
+export function buildFeedAvailabilityDate(
+  build: Build,
+  now: Date = new Date(),
+): string | null {
+  if (buildFeedAvailability(build) !== "preorder") return null;
+  return `${addBusinessDays(now, build.assemblyDays).toISOString().slice(0, 10)}T00:00Z`;
+}
+
 export function buildFeedTitle(build: Build): string {
   return normalizeSpaces(build.name);
 }
@@ -167,6 +192,7 @@ export function buildFeedItemXml(
   build: Build,
   baseUrl = getFeedBaseUrl(),
   platform: FeedPlatform = "meta",
+  now: Date = new Date(),
 ): string | null {
   const config = FEED_PLATFORMS[platform];
   const [mainImage, ...restImages] = buildFeedImageUrls(build);
@@ -175,6 +201,7 @@ export function buildFeedItemXml(
   if (!mainImage || !(build.priceUah > 0)) return null;
 
   const { price, salePrice } = buildFeedPrices(build);
+  const availabilityDate = buildFeedAvailabilityDate(build, now);
 
   const fields: string[] = [
     `<g:id>${escapeXml(buildFeedId(build))}</g:id>`,
@@ -190,6 +217,9 @@ export function buildFeedItemXml(
     `<g:brand>${escapeXml(BRAND)}</g:brand>`,
     `<g:condition>new</g:condition>`,
     `<g:availability>${buildFeedAvailability(build)}</g:availability>`,
+    ...(availabilityDate
+      ? [`<g:availability_date>${availabilityDate}</g:availability_date>`]
+      : []),
     `<g:price>${price}</g:price>`,
     ...(salePrice ? [`<g:sale_price>${salePrice}</g:sale_price>`] : []),
     `<g:product_type>${escapeXml(PRODUCT_TYPE)}</g:product_type>`,
