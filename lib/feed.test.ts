@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { BUILDS } from "@/lib/mock/builds";
 import {
   buildFeedAvailability,
+  buildFeedAvailabilityDate,
   buildFeedDescription,
   buildFeedId,
   buildFeedImageUrls,
@@ -225,5 +226,46 @@ describe("Google platform", () => {
     expect(xml).toContain("<g:id>KPC-ON</g:id>");
     expect(xml).not.toContain("KPC-OFF");
     expect(xml).not.toContain("KPC-ARCHIVED");
+  });
+});
+
+describe("availability_date", () => {
+  // Середа 2026-10-07
+  const now = new Date("2026-10-07T10:00:00Z");
+
+  it("is set only for preorder builds", () => {
+    expect(buildFeedAvailabilityDate(makeBuild({ status: "in_stock" }), now)).toBeNull();
+    expect(buildFeedAvailabilityDate(makeBuild({ status: "out_of_stock" }), now)).toBeNull();
+    expect(
+      buildFeedAvailabilityDate(makeBuild({ status: "assemble_on_order" }), now),
+    ).not.toBeNull();
+  });
+
+  it("is today plus assembly business days, skipping weekends", () => {
+    const build = (days: number) =>
+      makeBuild({ status: "assemble_on_order", assemblyDays: days });
+    expect(buildFeedAvailabilityDate(build(1), now)).toBe("2026-10-08T00:00Z");
+    expect(buildFeedAvailabilityDate(build(3), now)).toBe("2026-10-12T00:00Z");
+    expect(buildFeedAvailabilityDate(build(5), now)).toBe("2026-10-14T00:00Z");
+  });
+
+  it("is always in the future, even with 0 assembly days", () => {
+    const date = buildFeedAvailabilityDate(
+      makeBuild({ status: "assemble_on_order", assemblyDays: 0 }),
+      now,
+    );
+    expect(new Date(date as string).getTime()).toBeGreaterThan(now.getTime());
+  });
+
+  it("is rendered for preorder in both feeds, and absent otherwise", () => {
+    const preorder = makeBuild({ status: "assemble_on_order", assemblyDays: 3 });
+    for (const platform of ["meta", "google"] as const) {
+      expect(buildFeedItemXml(preorder, BASE_URL, platform, now)).toContain(
+        "<g:availability_date>2026-10-12T00:00Z</g:availability_date>",
+      );
+      expect(buildFeedItemXml(makeBuild(), BASE_URL, platform, now)).not.toContain(
+        "availability_date",
+      );
+    }
   });
 });
