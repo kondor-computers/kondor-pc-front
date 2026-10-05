@@ -124,6 +124,7 @@ function pathsForDocument(doc: WebhookPayload): PathTarget[] {
     case "build":
       paths.push({ path: "/", type: "page" });
       paths.push({ path: "/pk", type: "page" });
+      paths.push({ path: "/api/feed/meta" });
       if (slug) {
         paths.push({ path: `/pk/${slug}` });
       } else {
