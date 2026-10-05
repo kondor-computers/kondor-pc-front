@@ -9,6 +9,7 @@ import {
   FLY_DURATION_MS,
 } from "@/components/cart/AddToCartAnimation";
 import { useCartStore } from "@/lib/cartStore";
+import { trackAddToCart } from "@/lib/analytics/ecommerce";
 import { cn } from "@/lib/utils";
 import { useCatalogDetail } from "./CatalogDetailProvider";
 
@@ -59,6 +60,13 @@ export function CatalogPurchasePanel() {
         colorCode: activeVariant?.code,
         colorName: activeVariant?.color,
       });
+      trackAddToCart({
+        slug: item.slug,
+        name: item.name,
+        unitPriceUah: finalPrice,
+        colorCode: activeVariant?.code,
+        colorName: activeVariant?.color,
+      });
       setJustAdded(true);
       window.setTimeout(() => setJustAdded(false), 1500);
     }, FLY_DURATION_MS);
@@ -72,6 +80,13 @@ export function CatalogPurchasePanel() {
       priceUah: item.price,
       unitPriceUah: finalPrice,
       image: thumbUrl,
+      colorCode: activeVariant?.code,
+      colorName: activeVariant?.color,
+    });
+    trackAddToCart({
+      slug: item.slug,
+      name: item.name,
+      unitPriceUah: finalPrice,
       colorCode: activeVariant?.code,
       colorName: activeVariant?.color,
     });

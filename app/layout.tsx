@@ -4,7 +4,7 @@ import { Montserrat, Unbounded } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
 
-const GTM_ID = "GTM-KWHVVR26";
+const GTM_ID = process.env.NEXT_PUBLIC_GTM_ID || "GTM-KWHVVR26";
 import { Suspense } from "react";
 import { LazyCartDrawer } from "@/components/cart/LazyCartDrawer";
 import { LazyScrollToTop } from "@/components/shared/LazyScrollToTop";

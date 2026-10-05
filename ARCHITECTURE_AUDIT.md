@@ -708,7 +708,9 @@ public/
 - `grep -rn "GA_|gtag|GTM|fbq|posthog|amplitude|mixpanel|trackEvent"` — порожньо.
 - У `<head>` через layout — жодних `<Script>` для аналітики.
 
-⚠️ **Ризик**: усі CTA на лендингах (`Підібрати ПК`, `Купити`, відкриття wizard) **не трекаються**. До production-launch конструктора треба додати хоча б GTM/GA4 + хелпер `trackEvent` + обернути основні CTA-кліки.
+> Оновлення: GTM і події ecommerce додано, див. `docs/analytics.md`.
+
+⚠️ **Ризик (історичний)**: усі CTA на лендингах (`Підібрати ПК`, `Купити`, відкриття wizard) **не трекаються**. До production-launch конструктора треба додати хоча б GTM/GA4 + хелпер `trackEvent` + обернути основні CTA-кліки.
 
 ---
 
