@@ -173,3 +173,57 @@ describe("buildFeedXml", () => {
     expect(xml).not.toContain("<item>");
   });
 });
+
+describe("Google platform", () => {
+  const manyImages = Array.from({ length: 25 }, (_, i) => ({
+    url: `https://cdn.sanity.io/images/p/production/img-${i}-1200x800.webp?w=1600&q=85`,
+  }));
+
+  it("adds identifier_exists=no, which Meta does not have", () => {
+    const google = buildFeedItemXml(makeBuild(), BASE_URL, "google") ?? "";
+    const meta = buildFeedItemXml(makeBuild(), BASE_URL, "meta") ?? "";
+    expect(google).toContain("<g:identifier_exists>no</g:identifier_exists>");
+    expect(meta).not.toContain("identifier_exists");
+  });
+
+  it("limits additional images to 10 for Google and 19 for Meta", () => {
+    const build = makeBuild({ galleryImages: manyImages });
+    const count = (xml: string) => xml.match(/<g:additional_image_link>/g)?.length ?? 0;
+
+    expect(count(buildFeedItemXml(build, BASE_URL, "google") ?? "")).toBe(10);
+    expect(count(buildFeedItemXml(build, BASE_URL, "meta") ?? "")).toBe(19);
+  });
+
+  it("defaults to the Meta platform", () => {
+    expect(buildFeedItemXml(makeBuild(), BASE_URL)).toBe(
+      buildFeedItemXml(makeBuild(), BASE_URL, "meta"),
+    );
+  });
+
+  it("starts the item with g:id", () => {
+    const xml = buildFeedItemXml(makeBuild(), BASE_URL, "google") ?? "";
+    expect(xml.indexOf("<g:id>")).toBeLessThan(xml.indexOf("<g:title>"));
+    expect(xml.split("\n")[1]).toContain("<g:id>");
+  });
+
+  it("points the channel to the Google feed URL", () => {
+    const xml = buildFeedXml([makeBuild()], BASE_URL, "google");
+    expect(xml).toContain('href="https://kondor-pc.ua/api/feed/google"');
+    expect(xml).toContain("Google Merchant Center");
+  });
+
+  it("applies the same filter as Meta", () => {
+    const xml = buildFeedXml(
+      [
+        makeBuild({ sku: "KPC-ON" }),
+        makeBuild({ sku: "KPC-OFF", showInFeed: false }),
+        makeBuild({ sku: "KPC-ARCHIVED", status: "archived" }),
+      ],
+      BASE_URL,
+      "google",
+    );
+    expect(xml).toContain("<g:id>KPC-ON</g:id>");
+    expect(xml).not.toContain("KPC-OFF");
+    expect(xml).not.toContain("KPC-ARCHIVED");
+  });
+});
