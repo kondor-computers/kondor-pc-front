@@ -10,8 +10,38 @@ export const PRODUCT_TYPE = "Ігрові ПК";
 export const GOOGLE_PRODUCT_CATEGORY =
   "Electronics > Computers > Desktop Computers";
 
-/** Meta дозволяє до 20 зображень: 1 основне + 19 додаткових. */
-export const MAX_ADDITIONAL_IMAGES = 19;
+export type FeedPlatform = "meta" | "google";
+
+interface FeedPlatformConfig {
+  /** Шлях роуту фіда (для `atom:link`). */
+  path: string;
+  channelDescription: string;
+  /** Максимум додаткових зображень на offer. */
+  maxAdditionalImages: number;
+  /** Додаткові поля `<item>`, специфічні для платформи. */
+  extraFields: string[];
+}
+
+export const FEED_PLATFORMS: Record<FeedPlatform, FeedPlatformConfig> = {
+  meta: {
+    path: "/api/feed/meta",
+    channelDescription: "Динамічний фід збірок Kondor PC для Meta/Facebook Catalog",
+    // Meta дозволяє до 20 зображень: 1 основне + 19 додаткових.
+    maxAdditionalImages: 19,
+    extraFields: [],
+  },
+  google: {
+    path: "/api/feed/google",
+    channelDescription:
+      "Динамічний фід збірок Kondor PC для Google Merchant Center",
+    // Google Merchant Center дозволяє до 10 додаткових зображень.
+    maxAdditionalImages: 10,
+    // У Sanity немає GTIN/MPN: без цього тега Google відхиляє offer як такий,
+    // що не має унікального ідентифікатора. Для товарів власного бренду без
+    // штрихкода це допустима практика.
+    extraFields: ["<g:identifier_exists>no</g:identifier_exists>"],
+  },
+};
 
 export type FeedAvailability = "in stock" | "preorder" | "out of stock";
 
@@ -136,10 +166,12 @@ export function buildFeedPrices(build: Build): {
 export function buildFeedItemXml(
   build: Build,
   baseUrl = getFeedBaseUrl(),
+  platform: FeedPlatform = "meta",
 ): string | null {
+  const config = FEED_PLATFORMS[platform];
   const [mainImage, ...restImages] = buildFeedImageUrls(build);
 
-  // Без зображення або з нульовою ціною offer не пройде валідацію Meta.
+  // Без зображення або з нульовою ціною offer не пройде валідацію Meta/Google.
   if (!mainImage || !(build.priceUah > 0)) return null;
 
   const { price, salePrice } = buildFeedPrices(build);
@@ -151,7 +183,7 @@ export function buildFeedItemXml(
     `<g:link>${escapeXml(buildFeedLink(build, baseUrl))}</g:link>`,
     `<g:image_link>${escapeXml(mainImage)}</g:image_link>`,
     ...restImages
-      .slice(0, MAX_ADDITIONAL_IMAGES)
+      .slice(0, config.maxAdditionalImages)
       .map(
         (url) => `<g:additional_image_link>${escapeXml(url)}</g:additional_image_link>`,
       ),
@@ -162,16 +194,22 @@ export function buildFeedItemXml(
     ...(salePrice ? [`<g:sale_price>${salePrice}</g:sale_price>`] : []),
     `<g:product_type>${escapeXml(PRODUCT_TYPE)}</g:product_type>`,
     `<g:google_product_category>${escapeXml(GOOGLE_PRODUCT_CATEGORY)}</g:google_product_category>`,
+    ...config.extraFields,
   ];
 
   return `<item>\n${fields.map((field) => `      ${field}`).join("\n")}\n    </item>`;
 }
 
-export function buildFeedXml(builds: Build[], baseUrl = getFeedBaseUrl()): string {
-  const feedUrl = `${baseUrl}/api/feed/meta`;
+export function buildFeedXml(
+  builds: Build[],
+  baseUrl = getFeedBaseUrl(),
+  platform: FeedPlatform = "meta",
+): string {
+  const config = FEED_PLATFORMS[platform];
+  const feedUrl = `${baseUrl}${config.path}`;
   const items = builds
     .filter(isFeedBuild)
-    .map((build) => buildFeedItemXml(build, baseUrl))
+    .map((build) => buildFeedItemXml(build, baseUrl, platform))
     .filter((item): item is string => Boolean(item));
 
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -179,7 +217,7 @@ export function buildFeedXml(builds: Build[], baseUrl = getFeedBaseUrl()): strin
   <channel>
     <title>Kondor PC — товарний фід</title>
     <link>${escapeXml(baseUrl)}</link>
-    <description>Динамічний фід збірок Kondor PC для Meta/Facebook Catalog</description>
+    <description>${escapeXml(config.channelDescription)}</description>
     <atom:link href="${escapeXml(feedUrl)}" rel="self" type="application/rss+xml" />
     ${items.join("\n    ")}
   </channel>
