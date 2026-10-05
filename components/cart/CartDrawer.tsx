@@ -5,6 +5,7 @@ import Link from "next/link";
 import { ShoppingBag, X } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useCartStore, lineKey } from "@/lib/cartStore";
+import { trackStartCheckout } from "@/lib/analytics/ecommerce";
 import { TechButtonLink } from "@/components/shared/TechButtonPrimitives";
 import { formatPrice } from "@/lib/format";
 import { CartListItem } from "./CartListItem";
@@ -168,7 +169,10 @@ export function CartDrawer() {
                   href="/oformlennya"
                   size="md"
                   className="w-full h-12"
-                  onClick={closeDrawer}
+                  onClick={() => {
+                    trackStartCheckout(items);
+                    closeDrawer();
+                  }}
                 >
                   Оформити замовлення
                 </TechButtonLink>

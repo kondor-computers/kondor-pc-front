@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Check } from "lucide-react";
 import { TechButton } from "@/components/shared/TechButton";
 import { useCartStore } from "@/lib/cartStore";
+import { trackAddToCart } from "@/lib/analytics/ecommerce";
 import { useProductConfiguratorOptional } from "@/components/shared/ProductConfigurator";
 import {
   AddToCartAnimation,
@@ -77,6 +78,7 @@ export function PurchaseActions({
         sku,
         image,
       });
+      trackAddToCart({ slug, sku, name, unitPriceUah, options });
       setJustAdded(true);
       window.setTimeout(() => setJustAdded(false), 1500);
     }, FLY_DURATION_MS);
@@ -95,6 +97,7 @@ export function PurchaseActions({
       sku,
       image,
     });
+    trackAddToCart({ slug, sku, name, unitPriceUah, options });
     router.push("/oformlennya");
   }
 

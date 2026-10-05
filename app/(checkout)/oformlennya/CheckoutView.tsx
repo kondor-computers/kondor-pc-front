@@ -20,12 +20,7 @@ import {
   type CartItem,
 } from "@/lib/cartStore";
 import { buildMonopayBasket } from "@/lib/monopay/basket";
-import {
-  getAnalyticsPaymentMethod,
-  getCheckoutPaymentStatus,
-  saveMonopayCheckoutSession,
-  trackPurchase,
-} from "@/lib/analytics/purchase";
+import { toAnalyticsItem, trackSubmitOrder } from "@/lib/analytics/ecommerce";
 import {
   buildKeyCrmOrderPayload,
   sendOrderToKeyCrm,
@@ -478,6 +473,20 @@ export function CheckoutView() {
     const orderDate = new Date();
     const orderNumber = `UA-${orderDate.toISOString().slice(2, 10).replace(/-/g, "")}-${String(Math.floor(Math.random() * 9000 + 1000))}`;
 
+    const [firstName, ...restName] = values.customerName.trim().split(/\s+/);
+    const reportOrder = () =>
+      trackSubmitOrder({
+        order_number: orderNumber,
+        value: payableTotal,
+        items: cartItems.map(toAnalyticsItem),
+        user_data: {
+          phone: values.customerPhone.trim(),
+          first_name: firstName,
+          last_name: restName.join(" "),
+          city: values.deliveryCity?.trim() ?? "",
+        },
+      });
+
     const text =
       `${TG.form} <b>Нове замовлення</b>\n` +
       `${TG.number} <b>Номер:</b> ${orderNumber}\n\n` +
@@ -538,23 +547,6 @@ export function CheckoutView() {
           throw new Error("invoice failed");
         }
 
-        trackPurchase({
-          transaction_id: orderNumber,
-          value: payableTotal,
-          currency: "UAH",
-          payment_method: getAnalyticsPaymentMethod(values.paymentMethod),
-          payment_status: "pending",
-        });
-
-        if (invoiceData.invoiceId) {
-          saveMonopayCheckoutSession({
-            invoiceId: invoiceData.invoiceId,
-            transaction_id: orderNumber,
-            value: payableTotal,
-            payment_method: getAnalyticsPaymentMethod(values.paymentMethod),
-          });
-        }
-
         await sendTelegramMessage(text);
 
         const keyCrmPayload = buildKeyCrmOrderPayload({
@@ -571,18 +563,12 @@ export function CheckoutView() {
           console.error("[checkout/keycrm]", error);
         }
 
+        reportOrder();
+
         clear();
         window.location.href = invoiceData.pageUrl;
         return;
       }
-
-      trackPurchase({
-        transaction_id: orderNumber,
-        value: payableTotal,
-        currency: "UAH",
-        payment_method: getAnalyticsPaymentMethod(values.paymentMethod),
-        payment_status: getCheckoutPaymentStatus(values.paymentMethod),
-      });
 
       await sendTelegramMessage(text);
 
@@ -599,6 +585,8 @@ export function CheckoutView() {
       } catch (error) {
         console.error("[checkout/keycrm]", error);
       }
+
+      reportOrder();
 
       clear();
       router.push(

@@ -19,6 +19,7 @@ import { ComponentList } from "@/components/shared/ComponentList";
 import { IncludedFeaturesBlock } from "@/components/shared/IncludedFeaturesBlock";
 import { ReviewCard } from "@/components/shared/ReviewCard";
 import { LazyStickyBuyBar } from "./LazyStickyBuyBar";
+import { ViewItemTracker } from "@/components/analytics/ViewItemTracker";
 import { BuildCardStatic } from "@/components/shared/BuildCardStatic";
 import { ProductConfiguratorProvider } from "@/components/shared/ProductConfigurator";
 import { BuildIdentityColumn } from "@/components/shared/BuildIdentityColumn";
@@ -217,6 +218,14 @@ export default async function BuildPage({
 
   return (
     <ProductConfiguratorProvider build={build}>
+      <ViewItemTracker
+        item={{
+          slug: build.slug,
+          sku: build.sku,
+          name: build.name,
+          priceUah: build.priceUah,
+        }}
+      />
       <div style={{ ["--sku" as string]: accent }}>
         <ProductOgType />
         <Suspense fallback={null}>

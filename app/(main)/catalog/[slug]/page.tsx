@@ -11,6 +11,7 @@ import { SimilarCatalogSection } from "./SimilarCatalogSection";
 import { SimilarCatalogSkeleton } from "./SimilarCatalogSkeleton";
 import { SITE_URL } from "@/lib/seo/constants";
 import { CatalogDetailProvider } from "./CatalogDetailProvider";
+import { ViewItemTracker } from "@/components/analytics/ViewItemTracker";
 import { CatalogHeroLcpImage } from "./CatalogHeroLcpImage";
 import { CatalogHeroTitle } from "./CatalogHeroTitle";
 import { CatalogHeroPrice } from "./CatalogHeroPrice";
@@ -118,6 +119,18 @@ export default async function CatalogDetailPage({
       />
 
       <CatalogDetailProvider item={item}>
+        <ViewItemTracker
+          item={{
+            slug: item.slug,
+            name: item.name,
+            colorCode: item.coloropts?.[0]?.code,
+            priceUah:
+              typeof item.priceDiscount === "number" &&
+              item.priceDiscount < item.price
+                ? item.priceDiscount
+                : item.price,
+          }}
+        />
         <section className="container-site pb-10">
           <div className="grid gap-8 lg:grid-cols-[1.1fr_1fr]">
             <div>

@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { SKU_ACCENTS, type SkuSlug } from "@/lib/sku-accents";
 import { buildImageUrl } from "@/lib/build/images";
 import { useCartStore } from "@/lib/cartStore";
+import { trackAddToCart } from "@/lib/analytics/ecommerce";
 import { useProductConfiguratorOptional } from "@/components/shared/ProductConfigurator";
 
 const TELEGRAM_HANDLE =
@@ -69,6 +70,13 @@ export function StickyMobileBuyBar({
       spec: config?.resolvedSpec,
       sku: config?.build.sku,
       image: imageSrc,
+    });
+    trackAddToCart({
+      slug,
+      sku: config?.build.sku,
+      name,
+      unitPriceUah: displayPrice,
+      options: config?.cartOptions,
     });
     router.push("/oformlennya");
   }

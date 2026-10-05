@@ -8,6 +8,7 @@ import {
   FLY_DURATION_MS,
 } from "@/components/cart/AddToCartAnimation";
 import { useCartStore } from "@/lib/cartStore";
+import { trackAddToCart } from "@/lib/analytics/ecommerce";
 import type { CatalogProductListItem } from "@/types/catalog";
 
 /**
@@ -55,6 +56,11 @@ export function CatalogCardBuyButton({
         priceUah: variant.price,
         unitPriceUah: finalPrice,
         image: thumbUrl,
+      });
+      trackAddToCart({
+        slug: variant.slug,
+        name: variant.name,
+        unitPriceUah: finalPrice,
       });
       setJustAdded(true);
       window.setTimeout(() => setJustAdded(false), 1500);

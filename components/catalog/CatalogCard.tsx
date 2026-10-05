@@ -10,6 +10,7 @@ import {
 } from "@/components/cart/AddToCartAnimation";
 import { SanityImage } from "@/components/shared/SanityImage";
 import { useCartStore } from "@/lib/cartStore";
+import { trackAddToCart } from "@/lib/analytics/ecommerce";
 import { formatPrice } from "@/lib/format";
 import { urlFor } from "@/lib/sanity/image";
 import { cn } from "@/lib/utils";
@@ -194,6 +195,13 @@ export function CatalogCard({
         priceUah: committedVariant.price,
         unitPriceUah: committedFinalPrice,
         image: committedThumb,
+        colorCode: committedSwatch?.code,
+        colorName: committedSwatch?.label,
+      });
+      trackAddToCart({
+        slug: committedVariant.slug,
+        name: committedVariant.name,
+        unitPriceUah: committedFinalPrice,
         colorCode: committedSwatch?.code,
         colorName: committedSwatch?.label,
       });

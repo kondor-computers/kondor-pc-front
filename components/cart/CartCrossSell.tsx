@@ -6,6 +6,7 @@ import { Plus } from "lucide-react";
 import { urlFor } from "@/lib/sanity/image";
 import { SanityImage } from "@/components/shared/SanityImage";
 import { useCartStore } from "@/lib/cartStore";
+import { trackAddToCart } from "@/lib/analytics/ecommerce";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { CatalogProductListItem } from "@/types/catalog";
@@ -133,7 +134,7 @@ export function CartCrossSell() {
               <button
                 type="button"
                 aria-label={`Додати ${item.name} в кошик`}
-                onClick={() =>
+                onClick={() => {
                   add({
                     itemType: "accessory",
                     slug: item.slug,
@@ -141,8 +142,13 @@ export function CartCrossSell() {
                     priceUah: item.price,
                     unitPriceUah: finalPrice,
                     image: thumb,
-                  })
-                }
+                  });
+                  trackAddToCart({
+                    slug: item.slug,
+                    name: item.name,
+                    unitPriceUah: finalPrice,
+                  });
+                }}
                 className={cn(
                   "flex size-9 shrink-0 items-center justify-center rounded-md",
                   "border border-border bg-background transition",
