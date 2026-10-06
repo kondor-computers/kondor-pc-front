@@ -21,6 +21,7 @@ import {
 } from "@/lib/cartStore";
 import { buildMonopayBasket } from "@/lib/monopay/basket";
 import { toAnalyticsItem, trackSubmitOrder } from "@/lib/analytics/ecommerce";
+import { sendServerPurchase } from "@/lib/analytics/serverPurchase";
 import {
   buildKeyCrmOrderPayload,
   sendOrderToKeyCrm,
@@ -474,11 +475,12 @@ export function CheckoutView() {
     const orderNumber = `UA-${orderDate.toISOString().slice(2, 10).replace(/-/g, "")}-${String(Math.floor(Math.random() * 9000 + 1000))}`;
 
     const [firstName, ...restName] = values.customerName.trim().split(/\s+/);
-    const reportOrder = () =>
+    const reportOrder = () => {
+      const items = cartItems.map(toAnalyticsItem);
       trackSubmitOrder({
         order_number: orderNumber,
         value: payableTotal,
-        items: cartItems.map(toAnalyticsItem),
+        items,
         user_data: {
           phone: values.customerPhone.trim(),
           first_name: firstName,
@@ -486,6 +488,13 @@ export function CheckoutView() {
           city: values.deliveryCity?.trim() ?? "",
         },
       });
+      sendServerPurchase({
+        orderNumber,
+        value: payableTotal,
+        items,
+        phone: values.customerPhone.trim(),
+      });
+    };
 
     const text =
       `${TG.form} <b>Нове замовлення</b>\n` +

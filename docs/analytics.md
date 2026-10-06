@@ -17,3 +17,33 @@ GTM-контейнер підключено в `app/layout.tsx` (`NEXT_PUBLIC_GT
 `user_data` передається **без хешування**.
 
 Подія `purchase` прибрана. Конверсія — `submit_order`; для оплати карткою вона спрацьовує до підтвердження платежу.
+
+## Серверні події (Meta Conversions API, TikTok Events API)
+
+Покупка (`submit_order`) додатково відправляється з сервера, щоб не губитись через блокувальники та обмеження браузерів.
+
+Потік: `CheckoutView` → `lib/analytics/serverPurchase.ts` (`fetch` з `keepalive`) → `POST /api/analytics/purchase` → `lib/analytics/server/{meta,tiktok}.ts`.
+
+- Meta: подія `Purchase`, TikTok: `CompletePayment`.
+- Дедуплікація з браузерною подією: `event_id` = номер замовлення (його ж передають теги GTM).
+- Ідентифікатори: cookie `_fbp`/`_fbc` (Meta Pixel), `_ttp` (TikTok Pixel), `ttclid` і `fbclid` з URL зберігає `ClickIdTracker` (cookie `kondor_ttclid`, `kondor_fbc`, 30 днів).
+- Помилки відправки не впливають на оформлення замовлення, лише логуються.
+- Ендпоінт перевіряє `Origin`, валідує тіло (zod). Ліміту запитів немає.
+
+### Змінні оточення (server-only)
+
+| Змінна | Призначення |
+|---|---|
+| `META_PIXEL_ID`, `META_CAPI_TOKEN` | Meta Conversions API. Без них Meta пропускається |
+| `META_GRAPH_VERSION` | Версія Graph API (за замовчуванням `v25.0`) |
+| `META_TEST_EVENT_CODE` | Лише для тестів (Test events). У продакшені прибрати |
+| `TIKTOK_PIXEL_CODE`, `TIKTOK_EVENTS_TOKEN` | TikTok Events API. Без них TikTok пропускається |
+| `TIKTOK_TEST_EVENT_CODE` | Лише для тестів. У продакшені прибрати |
+| `ANALYTICS_USER_DATA` | `none` (за замовчуванням): без персональних даних; `phone`: + хешований телефон |
+
+### Перевірка
+
+1. Додати test-коди, зробити тестове замовлення з позначками «ТЕСТ».
+2. Подія з'являється в Test events Meta і TikTok.
+3. У Meta Events Manager статус події має бути **Deduplicated** (збігається з браузерною).
+4. Прибрати test-коди.

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GoogleTagManager } from "@next/third-parties/google";
+import { ClickIdTracker } from "@/components/analytics/ClickIdTracker";
 import { Montserrat, Unbounded } from "next/font/google";
 import localFont from "next/font/local";
 import "./globals.css";
@@ -78,6 +79,7 @@ export default function RootLayout({
     >
       <body>
         <GoogleTagManager gtmId={GTM_ID} />
+        <ClickIdTracker />
         <Suspense fallback={null}>
           <ScrollTopOnNavigate />
         </Suspense>
