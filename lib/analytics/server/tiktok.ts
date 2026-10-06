@@ -1,4 +1,7 @@
-import type { PurchaseEventInput } from "@/lib/validations/analyticsPurchase";
+import type {
+  ServerEventInput,
+  ServerEventName,
+} from "@/lib/validations/analyticsEvent";
 
 import { hashPhoneForTikTok } from "./hash";
 import {
@@ -11,15 +14,20 @@ import {
 const TIKTOK_EVENTS_URL =
   "https://business-api.tiktok.com/open_api/v1.3/event/track/";
 
-export function buildTikTokPurchaseEvent(
-  input: PurchaseEventInput,
+const TIKTOK_EVENT_NAMES: Record<ServerEventName, string> = {
+  purchase: "CompletePayment",
+  start_checkout: "InitiateCheckout",
+};
+
+export function buildTikTokEvent(
+  input: ServerEventInput,
   ctx: RequestContext,
   mode: UserDataMode,
   nowMs: number = Date.now(),
 ) {
   const { tracking } = input;
   const phoneHash =
-    mode === "phone" && input.phone
+    input.event === "purchase" && mode === "phone" && input.phone
       ? hashPhoneForTikTok(input.phone)
       : undefined;
 
@@ -31,9 +39,9 @@ export function buildTikTokPurchaseEvent(
   if (phoneHash) user.phone = phoneHash;
 
   return {
-    event: "CompletePayment",
+    event: TIKTOK_EVENT_NAMES[input.event],
     event_time: Math.floor(nowMs / 1000),
-    event_id: input.orderNumber,
+    event_id: input.eventId,
     user,
     ...(tracking.eventSourceUrl
       ? { page: { url: tracking.eventSourceUrl } }
@@ -48,13 +56,13 @@ export function buildTikTokPurchaseEvent(
         quantity: i.quantity,
         price: i.price,
       })),
-      order_id: input.orderNumber,
+      ...(input.event === "purchase" ? { order_id: input.eventId } : {}),
     },
   };
 }
 
-export async function sendTikTokPurchase(
-  input: PurchaseEventInput,
+export async function sendTikTokEvent(
+  input: ServerEventInput,
   ctx: RequestContext,
   mode: UserDataMode,
 ): Promise<SendResult> {
@@ -77,7 +85,7 @@ export async function sendTikTokPurchase(
         event_source: "web",
         event_source_id: pixelCode,
         ...(testEventCode ? { test_event_code: testEventCode } : {}),
-        data: [buildTikTokPurchaseEvent(input, ctx, mode)],
+        data: [buildTikTokEvent(input, ctx, mode)],
       }),
       signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
     });

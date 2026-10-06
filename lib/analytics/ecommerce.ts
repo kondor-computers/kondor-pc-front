@@ -1,3 +1,5 @@
+import { sendServerEvent } from "@/lib/analytics/serverEvent";
+
 export type AnalyticsItem = {
   item_id: string;
   item_name: string;
@@ -34,6 +36,14 @@ export type SubmitOrderParams = {
 declare global {
   interface Window {
     dataLayer?: Record<string, unknown>[];
+  }
+}
+
+function newEventId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
   }
 }
 
@@ -84,15 +94,23 @@ export function trackAddToCart(source: AnalyticsSource): void {
 
 export function trackStartCheckout(sources: AnalyticsSource[]): void {
   const items = sources.map(toAnalyticsItem);
+  const value = totalOf(items);
+  // Той самий event_id йде в браузерну подію (теги GTM) і на сервер,
+  // тому Meta і TikTok об'єднують їх в одну.
+  const eventId = newEventId();
+
   pushEvent("start_checkout", {
-    value: totalOf(items),
+    event_id: eventId,
+    value,
     currency: "UAH",
     items,
   });
+  sendServerEvent({ event: "start_checkout", eventId, value, items });
 }
 
 export function trackSubmitOrder(params: SubmitOrderParams): void {
   pushEvent("submit_order", {
+    event_id: params.order_number,
     order_number: params.order_number,
     value: params.value,
     currency: "UAH",

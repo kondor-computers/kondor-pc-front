@@ -21,7 +21,7 @@ import {
 } from "@/lib/cartStore";
 import { buildMonopayBasket } from "@/lib/monopay/basket";
 import { toAnalyticsItem, trackSubmitOrder } from "@/lib/analytics/ecommerce";
-import { sendServerPurchase } from "@/lib/analytics/serverPurchase";
+import { sendServerEvent } from "@/lib/analytics/serverEvent";
 import {
   buildKeyCrmOrderPayload,
   sendOrderToKeyCrm,
@@ -488,8 +488,9 @@ export function CheckoutView() {
           city: values.deliveryCity?.trim() ?? "",
         },
       });
-      sendServerPurchase({
-        orderNumber,
+      sendServerEvent({
+        event: "purchase",
+        eventId: orderNumber,
         value: payableTotal,
         items,
         phone: values.customerPhone.trim(),
