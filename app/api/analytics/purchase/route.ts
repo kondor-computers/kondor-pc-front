@@ -34,10 +34,13 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   }
 
-  await sendServerPurchase(parsed.data, {
+  const results = await sendServerPurchase(parsed.data, {
     ip: clientIp(req),
     userAgent: req.headers.get("user-agent") ?? undefined,
   });
 
-  return NextResponse.json({ ok: true });
+  // Результати відправки показуємо лише в dev, щоб було видно відповідь платформ
+  return NextResponse.json(
+    process.env.NODE_ENV === "production" ? { ok: true } : { ok: true, results },
+  );
 }
