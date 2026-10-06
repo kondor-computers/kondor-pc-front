@@ -59,11 +59,12 @@ GTM-контейнер підключено в `app/layout.tsx` (`NEXT_PUBLIC_GT
 
 ### Теги GTM (фрагмент, що змінюється)
 
-Meta (`Meta Pixel - Events`), замість блоку `if (name === 'submit_order')`:
+Meta (`Meta Pixel - Events`), замість блоку `if (name === 'submit_order')` (`ev.order_number` потрібен як запасний варіант, поки код з `event_id` для покупки ще не задеплоєний):
 
 ```js
-if (ev.event_id) {
-  fbq('track', map[name], params, { eventID: ev.event_id });
+var eventId = ev.event_id || ev.order_number;
+if (eventId) {
+  fbq('track', map[name], params, { eventID: eventId });
 } else {
   fbq('track', map[name], params);
 }
@@ -72,8 +73,9 @@ if (ev.event_id) {
 TikTok (`TikTok Pixel - Events`):
 
 ```js
-if (ev.event_id) {
-  ttq.track(map[name], params, { event_id: ev.event_id });
+var eventId = ev.event_id || ev.order_number;
+if (eventId) {
+  ttq.track(map[name], params, { event_id: eventId });
 } else {
   ttq.track(map[name], params);
 }
