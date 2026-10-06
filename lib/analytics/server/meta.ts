@@ -1,4 +1,7 @@
-import type { PurchaseEventInput } from "@/lib/validations/analyticsPurchase";
+import type {
+  ServerEventInput,
+  ServerEventName,
+} from "@/lib/validations/analyticsEvent";
 
 import { hashPhoneForMeta, sha256 } from "./hash";
 import {
@@ -10,15 +13,22 @@ import {
 
 const DEFAULT_GRAPH_VERSION = "v25.0";
 
-export function buildMetaPurchaseEvent(
-  input: PurchaseEventInput,
+const META_EVENT_NAMES: Record<ServerEventName, string> = {
+  purchase: "Purchase",
+  start_checkout: "InitiateCheckout",
+};
+
+export function buildMetaEvent(
+  input: ServerEventInput,
   ctx: RequestContext,
   mode: UserDataMode,
   nowMs: number = Date.now(),
 ) {
   const { tracking } = input;
   const phoneHash =
-    mode === "phone" && input.phone ? hashPhoneForMeta(input.phone) : undefined;
+    input.event === "purchase" && mode === "phone" && input.phone
+      ? hashPhoneForMeta(input.phone)
+      : undefined;
 
   const userData: Record<string, unknown> = {
     country: [sha256("ua")],
@@ -30,9 +40,9 @@ export function buildMetaPurchaseEvent(
   if (phoneHash) userData.ph = [phoneHash];
 
   return {
-    event_name: "Purchase",
+    event_name: META_EVENT_NAMES[input.event],
     event_time: Math.floor(nowMs / 1000),
-    event_id: input.orderNumber,
+    event_id: input.eventId,
     action_source: "website",
     ...(tracking.eventSourceUrl
       ? { event_source_url: tracking.eventSourceUrl }
@@ -49,13 +59,13 @@ export function buildMetaPurchaseEvent(
         item_price: i.price,
       })),
       num_items: input.items.reduce((sum, i) => sum + i.quantity, 0),
-      order_id: input.orderNumber,
+      ...(input.event === "purchase" ? { order_id: input.eventId } : {}),
     },
   };
 }
 
-export async function sendMetaPurchase(
-  input: PurchaseEventInput,
+export async function sendMetaEvent(
+  input: ServerEventInput,
   ctx: RequestContext,
   mode: UserDataMode,
 ): Promise<SendResult> {
@@ -76,7 +86,7 @@ export async function sendMetaPurchase(
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           access_token: token,
-          data: [buildMetaPurchaseEvent(input, ctx, mode)],
+          data: [buildMetaEvent(input, ctx, mode)],
           ...(testEventCode ? { test_event_code: testEventCode } : {}),
         }),
         signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),

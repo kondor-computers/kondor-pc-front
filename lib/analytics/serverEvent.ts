@@ -1,23 +1,24 @@
 import { readTrackingContext } from "@/lib/analytics/clickIds";
 import type { AnalyticsItem } from "@/lib/analytics/ecommerce";
 
-type ServerPurchaseParams = {
-  orderNumber: string;
+type ServerEventParams = {
+  event: "purchase" | "start_checkout";
+  eventId: string;
   value: number;
   items: AnalyticsItem[];
   phone?: string;
 };
 
 /**
- * Дублює покупку на сервер (Meta Conversions API, TikTok Events API).
- * `keepalive` — щоб запит не обірвався при редіректі на оплату.
+ * Дублює подію на сервер (Meta Conversions API, TikTok Events API).
+ * `keepalive` — щоб запит не обірвався при переході на іншу сторінку.
  * Помилки тут ніколи не повинні ламати оформлення замовлення.
  */
-export function sendServerPurchase(params: ServerPurchaseParams): void {
+export function sendServerEvent(params: ServerEventParams): void {
   if (typeof window === "undefined") return;
 
   try {
-    void fetch("/api/analytics/purchase", {
+    void fetch("/api/analytics/event", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ ...params, tracking: readTrackingContext() }),

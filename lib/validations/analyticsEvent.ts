@@ -1,9 +1,14 @@
 import { z } from "zod";
 
+export const SERVER_EVENTS = ["purchase", "start_checkout"] as const;
+export type ServerEventName = (typeof SERVER_EVENTS)[number];
+
 const optionalCookie = z.string().max(512).optional();
 
-export const purchaseEventSchema = z.object({
-  orderNumber: z.string().min(1).max(64),
+export const serverEventSchema = z.object({
+  event: z.enum(SERVER_EVENTS),
+  /** Той самий id, що й у браузерній події (для дедуплікації). */
+  eventId: z.string().min(1).max(128),
   value: z.number().nonnegative().max(100_000_000),
   items: z
     .array(
@@ -28,4 +33,4 @@ export const purchaseEventSchema = z.object({
     .default({}),
 });
 
-export type PurchaseEventInput = z.infer<typeof purchaseEventSchema>;
+export type ServerEventInput = z.infer<typeof serverEventSchema>;

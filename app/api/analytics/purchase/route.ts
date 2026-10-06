@@ -1,46 +1,24 @@
 import { NextRequest, NextResponse } from "next/server";
 
-import { sendServerPurchase } from "@/lib/analytics/server/purchase";
-import { purchaseEventSchema } from "@/lib/validations/analyticsPurchase";
+import { POST as postEvent } from "@/app/api/analytics/event/route";
 
-function isSameOrigin(req: NextRequest): boolean {
-  const origin = req.headers.get("origin");
-  if (!origin) return true;
-  try {
-    return new URL(origin).host === req.headers.get("host");
-  } catch {
-    return false;
-  }
-}
-
-function clientIp(req: NextRequest): string | undefined {
-  const forwarded = req.headers.get("x-forwarded-for");
-  return (
-    forwarded?.split(",")[0]?.trim() ||
-    req.headers.get("x-real-ip") ||
-    undefined
-  );
-}
-
+/**
+ * Застарілий шлях: сторінки, відкриті в браузері під час деплою, ще можуть
+ * викликати його зі старим форматом (`orderNumber`). Перенаправляє на `/event`.
+ */
 export async function POST(req: NextRequest) {
-  if (!isSameOrigin(req)) {
-    return NextResponse.json({ error: "forbidden" }, { status: 403 });
-  }
-
-  const parsed = purchaseEventSchema.safeParse(
-    await req.json().catch(() => null),
-  );
-  if (!parsed.success) {
+  const body = (await req.json().catch(() => null)) as {
+    orderNumber?: string;
+  } | null;
+  if (!body || typeof body !== "object") {
     return NextResponse.json({ error: "invalid payload" }, { status: 400 });
   }
 
-  const results = await sendServerPurchase(parsed.data, {
-    ip: clientIp(req),
-    userAgent: req.headers.get("user-agent") ?? undefined,
+  const { orderNumber, ...rest } = body;
+  const forwarded = new NextRequest(req.url.replace("/purchase", "/event"), {
+    method: "POST",
+    headers: req.headers,
+    body: JSON.stringify({ ...rest, event: "purchase", eventId: orderNumber }),
   });
-
-  // Результати відправки показуємо лише в dev, щоб було видно відповідь платформ
-  return NextResponse.json(
-    process.env.NODE_ENV === "production" ? { ok: true } : { ok: true, results },
-  );
+  return postEvent(forwarded);
 }

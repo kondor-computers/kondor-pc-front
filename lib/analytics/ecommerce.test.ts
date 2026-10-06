@@ -17,9 +17,19 @@ const build = {
   options: [{ optionLabel: "32 GB RAM" }, { optionLabel: "1 TB SSD" }],
 };
 
+const fetchMock = vi.fn();
+
 describe("ecommerce analytics", () => {
   beforeEach(() => {
     vi.stubGlobal("window", { dataLayer: [] as Record<string, unknown>[] });
+    vi.stubGlobal("document", { cookie: "_fbp=fb.1.1.111; _ttp=ttp-value" });
+    vi.stubGlobal("location", {
+      href: "https://www.kondorpc.com.ua/pk/lunara",
+      protocol: "https:",
+      search: "",
+    });
+    fetchMock.mockReset();
+    vi.stubGlobal("fetch", fetchMock.mockResolvedValue(new Response("{}")));
   });
 
   afterEach(() => {
@@ -79,7 +89,7 @@ describe("ecommerce analytics", () => {
     });
   });
 
-  it("pushes start_checkout with the cart total", () => {
+  it("pushes start_checkout with the cart total and an event_id", () => {
     trackStartCheckout([
       build,
       { slug: "mouse", name: "Mouse", unitPriceUah: 1000, quantity: 3 },
@@ -91,7 +101,44 @@ describe("ecommerce analytics", () => {
       value: 53550,
       currency: "UAH",
     });
+    expect(typeof event.event_id).toBe("string");
     expect(event.items).toHaveLength(2);
+  });
+
+  it("sends start_checkout to the server with the same event_id", () => {
+    trackStartCheckout([build]);
+
+    const eventId = window.dataLayer![0].event_id;
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe("/api/analytics/event");
+    expect((init as RequestInit).keepalive).toBe(true);
+
+    const body = JSON.parse((init as RequestInit).body as string);
+    expect(body).toMatchObject({
+      event: "start_checkout",
+      eventId,
+      value: 50550,
+      tracking: {
+        fbp: "fb.1.1.111",
+        ttp: "ttp-value",
+        eventSourceUrl: "https://www.kondorpc.com.ua/pk/lunara",
+      },
+    });
+  });
+
+  it("generates a different event_id for every start_checkout", () => {
+    trackStartCheckout([build]);
+    trackStartCheckout([build]);
+
+    const [first, second] = window.dataLayer!;
+    expect(first.event_id).not.toBe(second.event_id);
+  });
+
+  it("does not send view_item or add_to_cart to the server", () => {
+    trackViewItem(build);
+    trackAddToCart(build);
+    expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("pushes submit_order with items and user_data", () => {
@@ -111,6 +158,7 @@ describe("ecommerce analytics", () => {
 
     expect(window.dataLayer![0]).toEqual({
       event: "submit_order",
+      event_id: "UA-250819-1001",
       order_number: "UA-250819-1001",
       value: 50550,
       currency: "UAH",
