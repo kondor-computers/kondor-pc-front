@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Phone, MessageSquare, Mail, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { DEFAULT_PHONE } from "@/lib/seo/constants";
 import { TechButtonLink } from "@/components/shared/TechButtonPrimitives";
 import {
   isNavGroup,
@@ -16,10 +17,13 @@ export function MobileMenu({
   isOpen,
   onClose,
   navItems,
+  phoneHref = `tel:${DEFAULT_PHONE}`,
 }: {
   isOpen: boolean;
   onClose: () => void;
   navItems: NavEntry[];
+  /** `tel:` link from Sanity `siteContacts`; falls back to DEFAULT_PHONE. */
+  phoneHref?: string;
 }) {
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -131,7 +135,7 @@ export function MobileMenu({
 
           <div className="mt-5 grid grid-cols-3 gap-2">
             <a
-              href="tel:+380000000000"
+              href={phoneHref}
               onClick={onClose}
               className="flex flex-col items-center gap-1.5 rounded-sm border border-white/8 bg-surface/50 py-3 text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-white/20 hover:text-foreground"
             >

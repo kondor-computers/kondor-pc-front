@@ -3,6 +3,7 @@ import type { CatalogProductDetail } from "@/types/catalog";
 import type { FaqSchemaItem } from "@/lib/seo/faqSchema";
 import { pcBuildProductJsonLd } from "@/lib/seo/pcBuildProductJsonLd";
 import {
+  DEFAULT_PHONE,
   ORGANIZATION_LOGO_HEIGHT,
   ORGANIZATION_LOGO_URL,
   ORGANIZATION_LOGO_WIDTH,
@@ -17,7 +18,7 @@ import {
 export async function organizationJsonLd() {
   const contacts = await getSiteContacts().catch(() => null);
 
-  const phone = contacts?.phone ?? "+380633631066";
+  const phone = contacts?.phone ?? DEFAULT_PHONE;
   const email = contacts?.email ?? "info@kondor-pc.ua";
   const telegramUrl = contacts?.telegramChatUrl
     ? ensureHttps(contacts.telegramChatUrl)

@@ -153,7 +153,13 @@ function NavDropdown({ group }: { group: NavGroup }) {
   );
 }
 
-export function Header({ navItems }: { navItems: NavEntry[] }) {
+export function Header({
+  navItems,
+  phoneHref,
+}: {
+  navItems: NavEntry[];
+  phoneHref?: string;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -305,6 +311,7 @@ export function Header({ navItems }: { navItems: NavEntry[] }) {
           isOpen={menuOpen}
           onClose={() => setMenuOpen(false)}
           navItems={navItems}
+          phoneHref={phoneHref}
         />
       </div>
     </>
