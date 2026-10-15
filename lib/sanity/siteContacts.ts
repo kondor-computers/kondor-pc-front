@@ -121,6 +121,21 @@ export function phoneHref(phone: string): string {
   return `tel:${phone.replace(/\s/g, "")}`;
 }
 
+/**
+ * Links for the header's mobile menu. Props are passed to a client component,
+ * so only plain strings; `undefined` lets the menu use its DEFAULT_* fallbacks.
+ */
+export function headerContactLinks(contacts: SiteContacts | null) {
+  if (!contacts) return undefined;
+  return {
+    phoneHref: phoneHref(contacts.phone),
+    emailHref: `mailto:${contacts.email}`,
+    telegramHref: contacts.telegramChatUrl
+      ? ensureHttps(contacts.telegramChatUrl)
+      : telegramHref(contacts.telegram),
+  };
+}
+
 /** +380XXXXXXXXX → +380 XX XXX XX XX */
 export function formatPhoneDisplay(phone: string): string {
   const clean = phone.replace(/\s/g, "");

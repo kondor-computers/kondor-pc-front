@@ -8,7 +8,10 @@ import { Wordmark } from "@/components/brand/Wordmark";
 import { Button } from "@/components/ui/button";
 import { TechButtonLink } from "@/components/shared/TechButtonPrimitives";
 import { CartButton } from "@/components/layout/CartButton";
-import { MobileMenu } from "@/components/layout/MobileMenu";
+import {
+  MobileMenu,
+  type MobileMenuContacts,
+} from "@/components/layout/MobileMenu";
 import { cn } from "@/lib/utils";
 import MenuIcon from "@/components/icons/MenuIcon";
 import {
@@ -153,7 +156,13 @@ function NavDropdown({ group }: { group: NavGroup }) {
   );
 }
 
-export function Header({ navItems }: { navItems: NavEntry[] }) {
+export function Header({
+  navItems,
+  contacts,
+}: {
+  navItems: NavEntry[];
+  contacts?: MobileMenuContacts;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
@@ -305,6 +314,7 @@ export function Header({ navItems }: { navItems: NavEntry[] }) {
           isOpen={menuOpen}
           onClose={() => setMenuOpen(false)}
           navItems={navItems}
+          contacts={contacts}
         />
       </div>
     </>

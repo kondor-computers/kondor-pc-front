@@ -3,6 +3,10 @@ import type { CatalogProductDetail } from "@/types/catalog";
 import type { FaqSchemaItem } from "@/lib/seo/faqSchema";
 import { pcBuildProductJsonLd } from "@/lib/seo/pcBuildProductJsonLd";
 import {
+  DEFAULT_EMAIL,
+  DEFAULT_INSTAGRAM_URL,
+  DEFAULT_PHONE,
+  DEFAULT_TELEGRAM_URL,
   ORGANIZATION_LOGO_HEIGHT,
   ORGANIZATION_LOGO_URL,
   ORGANIZATION_LOGO_WIDTH,
@@ -17,16 +21,16 @@ import {
 export async function organizationJsonLd() {
   const contacts = await getSiteContacts().catch(() => null);
 
-  const phone = contacts?.phone ?? "+380633631066";
-  const email = contacts?.email ?? "info@kondor-pc.ua";
+  const phone = contacts?.phone ?? DEFAULT_PHONE;
+  const email = contacts?.email ?? DEFAULT_EMAIL;
   const telegramUrl = contacts?.telegramChatUrl
     ? ensureHttps(contacts.telegramChatUrl)
     : contacts?.telegram
       ? telegramHref(contacts.telegram)
-      : "https://t.me/kondor_pc_admin";
+      : DEFAULT_TELEGRAM_URL;
   const instagramUrl = contacts?.instagramUrl
     ? ensureHttps(contacts.instagramUrl)
-    : "https://www.instagram.com/kondor_pc";
+    : DEFAULT_INSTAGRAM_URL;
   const youtubeUrl = contacts?.youtubeUrl
     ? ensureHttps(contacts.youtubeUrl)
     : "https://www.youtube.com/@kondorpc";

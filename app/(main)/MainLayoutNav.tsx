@@ -3,6 +3,10 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { buildNav } from "@/components/layout/nav";
 import { fetchLandingNavItems } from "@/lib/sanity/landingAdapter";
+import {
+  getSiteContacts,
+  headerContactLinks,
+} from "@/lib/sanity/siteContacts";
 
 const loadNav = cache(async () => {
   const promoLinks = await fetchLandingNavItems("promo").catch(() => []);
@@ -10,8 +14,11 @@ const loadNav = cache(async () => {
 });
 
 export async function HeaderWithNav() {
-  const nav = await loadNav();
-  return <Header navItems={nav} />;
+  const [nav, contacts] = await Promise.all([
+    loadNav(),
+    getSiteContacts().catch(() => null),
+  ]);
+  return <Header navItems={nav} contacts={headerContactLinks(contacts)} />;
 }
 
 export async function FooterWithNav() {

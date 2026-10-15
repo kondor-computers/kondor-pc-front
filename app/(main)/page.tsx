@@ -29,6 +29,8 @@ import ArrowIcon from "@/components/icons/ArrowIcon";
 import { DeferredSitePageSchema } from "@/components/seo/DeferredSitePageSchema";
 import { SiteWebPageJsonLd } from "@/components/seo/SiteWebPageJsonLd";
 import { metadataForSitePage } from "@/lib/sanity/siteSeoFetcher";
+import { ensureHttps, getSiteContacts } from "@/lib/sanity/siteContacts";
+import { DEFAULT_INSTAGRAM_URL } from "@/lib/seo/constants";
 import { HomeHeroBuild } from "./home/HomeHeroBuild";
 import { HomeTopBuildsSection } from "./home/HomeTopBuildsSection";
 import { HomePcTasksSection } from "./home/HomePcTasksSection";
@@ -94,7 +96,13 @@ const STEPS = [
 const HOME_REVIEWS_LIMIT = 3;
 
 export default async function HomePage() {
-  const builds = await getAllBuilds();
+  const [builds, contacts] = await Promise.all([
+    getAllBuilds(),
+    getSiteContacts().catch(() => null),
+  ]);
+  const instagramUrl = contacts?.instagramUrl
+    ? ensureHttps(contacts.instagramUrl)
+    : DEFAULT_INSTAGRAM_URL;
   const topBuilds = selectHomeTopBuilds(builds);
   const heroBuild = topBuilds[2] ?? topBuilds[0];
   const homeReviews = collectHomepageReviews(builds, HOME_REVIEWS_LIMIT);
@@ -342,7 +350,7 @@ export default async function HomePage() {
             </div>
             <div className="mt-8 flex flex-col md:flex-row items-center gap-3">
               <a
-                href="https://instagram.com/kondor_pc"
+                href={instagramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={cn(
