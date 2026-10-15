@@ -3,7 +3,10 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { buildNav } from "@/components/layout/nav";
 import { fetchLandingNavItems } from "@/lib/sanity/landingAdapter";
-import { getSiteContacts, phoneHref } from "@/lib/sanity/siteContacts";
+import {
+  getSiteContacts,
+  headerContactLinks,
+} from "@/lib/sanity/siteContacts";
 
 const loadNav = cache(async () => {
   const promoLinks = await fetchLandingNavItems("promo").catch(() => []);
@@ -15,12 +18,7 @@ export async function HeaderWithNav() {
     loadNav(),
     getSiteContacts().catch(() => null),
   ]);
-  return (
-    <Header
-      navItems={nav}
-      phoneHref={contacts ? phoneHref(contacts.phone) : undefined}
-    />
-  );
+  return <Header navItems={nav} contacts={headerContactLinks(contacts)} />;
 }
 
 export async function FooterWithNav() {

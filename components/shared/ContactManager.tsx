@@ -4,6 +4,7 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatUah } from "@/lib/format";
+import { DEFAULT_PHONE } from "@/lib/seo/constants";
 
 /**
  * Inline "ask the manager" affordance used next to primary CTAs on product pages.
@@ -20,12 +21,13 @@ import { formatUah } from "@/lib/format";
 const TELEGRAM_HANDLE =
   process.env.NEXT_PUBLIC_TELEGRAM_HANDLE || "kondor_pc_admin";
 const PHONE_DISPLAY =
-  process.env.NEXT_PUBLIC_PHONE_DISPLAY || "+380 XX XXX XX XX";
+  process.env.NEXT_PUBLIC_PHONE_DISPLAY ||
+  DEFAULT_PHONE.replace(/^(\+380)(\d{2})(\d{3})(\d{2})(\d{2})$/, "$1 $2 $3 $4 $5");
 const PHONE_HREF =
-  process.env.NEXT_PUBLIC_PHONE_HREF || "tel:+380000000000";
+  process.env.NEXT_PUBLIC_PHONE_HREF || `tel:${DEFAULT_PHONE}`;
 // WhatsApp / Viber use the raw phone digits; both deep-links accept the number.
 const PHONE_DIGITS = (
-  process.env.NEXT_PUBLIC_PHONE_DIGITS || "380000000000"
+  process.env.NEXT_PUBLIC_PHONE_DIGITS || DEFAULT_PHONE
 ).replace(/[^\d]/g, "");
 
 function telegramUrl(prefill?: string) {

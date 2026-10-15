@@ -3,7 +3,10 @@ import { Footer } from "@/components/layout/Footer";
 import { RouteBreadcrumbs } from "@/components/shared/RouteBreadcrumbs";
 import { buildNav } from "@/components/layout/nav";
 import { fetchLandingNavItems } from "@/lib/sanity/landingAdapter";
-import { getSiteContacts, phoneHref } from "@/lib/sanity/siteContacts";
+import {
+  getSiteContacts,
+  headerContactLinks,
+} from "@/lib/sanity/siteContacts";
 
 export default async function CheckoutLayout({
   children,
@@ -18,10 +21,7 @@ export default async function CheckoutLayout({
 
   return (
     <>
-      <Header
-        navItems={nav}
-        phoneHref={contacts ? phoneHref(contacts.phone) : undefined}
-      />
+      <Header navItems={nav} contacts={headerContactLinks(contacts)} />
       <main className="overflow-hidden">
         <RouteBreadcrumbs />
         {children}

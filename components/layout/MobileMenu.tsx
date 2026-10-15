@@ -5,7 +5,11 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { Phone, MessageSquare, Mail, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DEFAULT_PHONE } from "@/lib/seo/constants";
+import {
+  DEFAULT_EMAIL,
+  DEFAULT_PHONE,
+  DEFAULT_TELEGRAM_URL,
+} from "@/lib/seo/constants";
 import { TechButtonLink } from "@/components/shared/TechButtonPrimitives";
 import {
   isNavGroup,
@@ -13,17 +17,29 @@ import {
   type NavGroup,
 } from "@/components/layout/nav";
 
+/** Contact links from Sanity `siteContacts` (see `headerContactLinks`). */
+export interface MobileMenuContacts {
+  phoneHref: string;
+  emailHref: string;
+  telegramHref: string;
+}
+
+const DEFAULT_CONTACTS: MobileMenuContacts = {
+  phoneHref: `tel:${DEFAULT_PHONE}`,
+  emailHref: `mailto:${DEFAULT_EMAIL}`,
+  telegramHref: DEFAULT_TELEGRAM_URL,
+};
+
 export function MobileMenu({
   isOpen,
   onClose,
   navItems,
-  phoneHref = `tel:${DEFAULT_PHONE}`,
+  contacts = DEFAULT_CONTACTS,
 }: {
   isOpen: boolean;
   onClose: () => void;
   navItems: NavEntry[];
-  /** `tel:` link from Sanity `siteContacts`; falls back to DEFAULT_PHONE. */
-  phoneHref?: string;
+  contacts?: MobileMenuContacts;
 }) {
   const pathname = usePathname();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -135,7 +151,7 @@ export function MobileMenu({
 
           <div className="mt-5 grid grid-cols-3 gap-2">
             <a
-              href={phoneHref}
+              href={contacts.phoneHref}
               onClick={onClose}
               className="flex flex-col items-center gap-1.5 rounded-sm border border-white/8 bg-surface/50 py-3 text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-white/20 hover:text-foreground"
             >
@@ -143,7 +159,7 @@ export function MobileMenu({
               Телефон
             </a>
             <a
-              href="https://t.me/kondor_pc_admin"
+              href={contacts.telegramHref}
               target="_blank"
               rel="noopener noreferrer"
               onClick={onClose}
@@ -153,7 +169,7 @@ export function MobileMenu({
               Telegram
             </a>
             <a
-              href="mailto:info@kondor-pc.ua"
+              href={contacts.emailHref}
               onClick={onClose}
               className="flex flex-col items-center gap-1.5 rounded-sm border border-white/8 bg-surface/50 py-3 text-[10px] uppercase tracking-wider text-muted-foreground transition hover:border-white/20 hover:text-foreground"
             >

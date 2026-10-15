@@ -2,10 +2,13 @@ export const SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://kondor-pc.ua";
 
 /**
- * Fallback phone (E.164) for when Sanity `siteContacts` is unavailable.
- * The live value comes from `getSiteContacts()` — keep this in sync with it.
+ * Fallback contacts for when Sanity `siteContacts` is unavailable.
+ * The live values come from `getSiteContacts()` — keep these in sync with it.
  */
-export const DEFAULT_PHONE = "+380633631066";
+export const DEFAULT_PHONE = "+380633631066"; // E.164
+export const DEFAULT_EMAIL = "info@kondorpc.com.ua";
+export const DEFAULT_TELEGRAM_URL = "https://t.me/kondor_pc_admin";
+export const DEFAULT_INSTAGRAM_URL = "https://www.instagram.com/kondor_pc";
 
 /** Host for UI copy (e.g. legal «на сайті example.com»). */
 export function siteDisplayHost(url: string = SITE_URL): string {
