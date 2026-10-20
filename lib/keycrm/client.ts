@@ -1,6 +1,7 @@
 import { formatCartItemCrmName } from "@/lib/cart/formatItemSpecification";
 import type { CartItem } from "@/lib/cartStore";
 import type { PromoApplication } from "@/lib/promoCode";
+import { CHECKOUT_CONTACTS_ONLY } from "@/lib/checkout/mode";
 import type {
   DeliveryMethod,
   OrderFormValues,
@@ -111,6 +112,9 @@ export function buildKeyCrmOrderPayload(params: {
     params;
   const orderedAt = orderDate.toISOString().slice(0, 19).replace("T", " ");
   const buyerCommentParts = [
+    CHECKOUT_CONTACTS_ONLY
+      ? "Заявка без оплати: доставку та оплату узгодити з клієнтом"
+      : "",
     `Telegram: ${values.customerTelegram.trim()}`,
     values.customerComment?.trim() || "",
   ].filter(Boolean);
@@ -124,11 +128,14 @@ export function buildKeyCrmOrderPayload(params: {
       full_name: values.customerName.trim(),
       phone: values.customerPhone.trim(),
     },
-    shipping: mapDelivery(values.deliveryMethod, values),
+    // Режим «тільки контакти»: доставки в заявці немає.
+    shipping: CHECKOUT_CONTACTS_ONLY
+      ? undefined
+      : mapDelivery(values.deliveryMethod, values),
     products: mapProducts(cartItems),
   };
 
-  if (values.paymentMethod === "monopay") {
+  if (CHECKOUT_CONTACTS_ONLY || values.paymentMethod === "monopay") {
     return basePayload;
   }
 

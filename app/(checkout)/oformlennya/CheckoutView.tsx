@@ -20,6 +20,7 @@ import {
   type CartItem,
 } from "@/lib/cartStore";
 import { buildMonopayBasket } from "@/lib/monopay/basket";
+import { CHECKOUT_CONTACTS_ONLY } from "@/lib/checkout/mode";
 import { toAnalyticsItem, trackSubmitOrder } from "@/lib/analytics/ecommerce";
 import { sendServerEvent } from "@/lib/analytics/serverEvent";
 import {
@@ -355,6 +356,8 @@ export function CheckoutView() {
       customerPhone: "+380",
       deliveryMethod: "np_branch",
       paymentMethod: "monopay",
+      // Режим «тільки контакти»: чекбокса немає, згода — текстом біля кнопки.
+      consent: CHECKOUT_CONTACTS_ONLY || undefined,
     },
   });
 
@@ -498,14 +501,18 @@ export function CheckoutView() {
     };
 
     const text =
-      `${TG.form} <b>Нове замовлення</b>\n` +
+      (CHECKOUT_CONTACTS_ONLY
+        ? `${TG.form} <b>Нова заявка (без оплати)</b>\n`
+        : `${TG.form} <b>Нове замовлення</b>\n`) +
       `${TG.number} <b>Номер:</b> ${orderNumber}\n\n` +
       `${TG.name} <b>Ім'я:</b> ${values.customerName.trim()}\n` +
       `${TG.phone} <b>Телефон:</b> ${values.customerPhone.trim()}\n` +
       `${TG.telegram} <b>Telegram:</b> ${values.customerTelegram.trim()}\n\n` +
-      `${TG.delivery} <b>Доставка:</b> ${optionTitle(DELIVERY_OPTIONS, values.deliveryMethod)}\n` +
-      formatDeliveryDetails(values) +
-      `${TG.payment} <b>Оплата:</b> ${optionTitle(PAYMENT_OPTIONS, values.paymentMethod)}\n` +
+      (CHECKOUT_CONTACTS_ONLY
+        ? `${TG.delivery} <b>Доставка та оплата:</b> узгодити з клієнтом\n`
+        : `${TG.delivery} <b>Доставка:</b> ${optionTitle(DELIVERY_OPTIONS, values.deliveryMethod)}\n` +
+          formatDeliveryDetails(values) +
+          `${TG.payment} <b>Оплата:</b> ${optionTitle(PAYMENT_OPTIONS, values.paymentMethod)}\n`) +
       (values.customerComment?.trim()
         ? `${TG.message} <b>Коментар:</b> ${values.customerComment.trim()}\n`
         : "") +
@@ -517,12 +524,12 @@ export function CheckoutView() {
         ? `\n${TG.total} <b>Знижка:</b> −${formatPrice(promoDiscount)}`
         : "") +
       `\n${TG.total} <b>До сплати:</b> ${formatPrice(payableTotal)}` +
-      (values.paymentMethod === "monopay"
+      (!CHECKOUT_CONTACTS_ONLY && values.paymentMethod === "monopay"
         ? `\n${TG.total} <b>До сплати (з комісією):</b> ${formatPrice(Math.round(payableTotal * 1.013))}`
         : "");
 
     try {
-      if (values.paymentMethod === "monopay") {
+      if (!CHECKOUT_CONTACTS_ONLY && values.paymentMethod === "monopay") {
         const payTotalUah = Math.round(payableTotal * 1.013);
         const commissionUah = payTotalUah - payableTotal;
         const invoiceRes = await fetch("/api/monopay/invoice", {
@@ -684,344 +691,372 @@ export function CheckoutView() {
           </div>
         </section>
 
-        {/* 2 · DELIVERY */}
-        <section className="rounded-lg border border-border bg-surface p-6">
-          <SectionNumber n="2" title="Доставка" />
-          <div className="mt-5 space-y-3">
-            {DELIVERY_OPTIONS.map((opt) => {
-              const active = deliveryMethod === opt.value;
-              return (
-                <label
-                  key={opt.value}
-                  className={cn(
-                    "flex cursor-pointer items-start gap-3 rounded-md border p-4 transition",
-                    active
-                      ? "border-foreground bg-surface-elevated"
-                      : "border-border hover:border-white/20",
-                  )}
-                >
-                  <input
-                    type="radio"
-                    value={opt.value}
-                    className="sr-only"
-                    {...register("deliveryMethod")}
-                  />
-                  <div
-                    className={cn(
-                      "mt-0.5 flex size-5 items-center justify-center rounded-full border-2 transition",
-                      active
-                        ? "border-foreground"
-                        : "border-muted-foreground/40",
-                    )}
-                  >
-                    {active && (
-                      <div className="size-2 rounded-full bg-foreground" />
-                    )}
-                  </div>
-                  <opt.icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">{opt.title}</div>
-                    <div className="text-xs text-muted-foreground">
-                      {opt.note}
-                    </div>
-                  </div>
-                </label>
-              );
-            })}
-          </div>
+        {/* 2 · DELIVERY + 3 · PAYMENT — сховані в режимі «тільки контакти»
+            (lib/checkout/mode.ts). */}
+        {!CHECKOUT_CONTACTS_ONLY && (
+          <>
+            {/* 2 · DELIVERY */}
+            <section className="rounded-lg border border-border bg-surface p-6">
+              <SectionNumber n="2" title="Доставка" />
+              <div className="mt-5 space-y-3">
+                {DELIVERY_OPTIONS.map((opt) => {
+                  const active = deliveryMethod === opt.value;
+                  return (
+                    <label
+                      key={opt.value}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-md border p-4 transition",
+                        active
+                          ? "border-foreground bg-surface-elevated"
+                          : "border-border hover:border-white/20",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        value={opt.value}
+                        className="sr-only"
+                        {...register("deliveryMethod")}
+                      />
+                      <div
+                        className={cn(
+                          "mt-0.5 flex size-5 items-center justify-center rounded-full border-2 transition",
+                          active
+                            ? "border-foreground"
+                            : "border-muted-foreground/40",
+                        )}
+                      >
+                        {active && (
+                          <div className="size-2 rounded-full bg-foreground" />
+                        )}
+                      </div>
+                      <opt.icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+                      <div>
+                        <div className="font-medium">{opt.title}</div>
+                        <div className="text-xs text-muted-foreground">
+                          {opt.note}
+                        </div>
+                      </div>
+                    </label>
+                  );
+                })}
+              </div>
 
-          {/* Cascading fields */}
-          {deliveryMethod !== "self_pickup" && (
-            <div className="mt-5 space-y-4">
-              <Field label="Місто" error={errors.deliveryCity?.message}>
-                <div className="relative">
-                  <Input
-                    placeholder="Почни вводити — з'явиться підказка"
-                    value={cityQuery}
-                    onChange={(e) => {
-                      setCityQuery(e.target.value);
-                      setCityOpen(true);
-                      setValue("deliveryCity", e.target.value);
-                      setValue("deliveryCityRef", "");
-                      setValue("deliveryBranchNumber", "");
-                      setBranchQuery("");
-                    }}
-                    onFocus={() => setCityOpen(true)}
-                    onBlur={() => setTimeout(() => setCityOpen(false), 150)}
-                    autoComplete="off"
-                  />
-                  {cityOpen && cityLoading && (
-                    <p className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-border bg-popover px-3 py-2 text-xs text-muted-foreground shadow-lg">
-                      Шукаємо міста…
-                    </p>
-                  )}
-                  {cityOpen &&
-                    !cityLoading &&
-                    cityQuery.trim().length > 0 &&
-                    cityOptions.length === 0 && (
-                      <p className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-border bg-popover px-3 py-2 text-xs text-muted-foreground shadow-lg">
-                        Нічого не знайдено
-                      </p>
-                    )}
-                  {cityOpen && !cityLoading && cityOptions.length > 0 && (
-                    <ul className="absolute left-0 right-0 top-full z-10 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
-                      {cityOptions.map((c) => (
-                        <li key={c.ref}>
-                          <button
-                            type="button"
-                            className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
-                            onMouseDown={(e) => e.preventDefault()}
-                            onClick={() => {
-                              setCityQuery(c.name);
-                              setCityOpen(false);
-                              setValue("deliveryCity", c.name, {
-                                shouldValidate: true,
-                              });
-                              setValue("deliveryCityRef", c.ref);
-                              setValue("deliveryBranchNumber", "");
-                              setBranchQuery("");
-                            }}
-                          >
-                            <span className="font-medium">{c.name}</span>
-                            <span className="ml-2 text-xs text-muted-foreground">
-                              {c.region}
-                            </span>
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </Field>
-
-              {deliveryMethod === "np_branch" && (
-                <Field
-                  label="Відділення Нової Пошти"
-                  error={errors.deliveryBranchNumber?.message}
-                >
-                  <input type="hidden" {...register("deliveryBranchNumber")} />
-                  <div className="relative">
-                    <Input
-                      placeholder={
-                        cityRef
-                          ? "Номер відділення, поштомату або адреса"
-                          : "Спершу оберіть місто"
-                      }
-                      value={branchQuery}
-                      disabled={!cityRef || branchesLoading}
-                      onChange={(e) => {
-                        setBranchQuery(e.target.value);
-                        setBranchOpen(true);
-                        setValue("deliveryBranchNumber", "");
-                      }}
-                      onFocus={() => {
-                        if (cityRef && !branchesLoading) setBranchOpen(true);
-                      }}
-                      onBlur={() => setTimeout(() => setBranchOpen(false), 150)}
-                      autoComplete="off"
-                    />
-                    {branchOpen && branchesLoading && (
-                      <p className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-border bg-popover px-3 py-2 text-xs text-muted-foreground shadow-lg">
-                        Завантажуємо відділення…
-                      </p>
-                    )}
-                    {branchOpen &&
-                      !branchesLoading &&
-                      cityRef &&
-                      branchQuery.trim().length > 0 &&
-                      filteredBranches.length === 0 && (
+              {/* Cascading fields */}
+              {deliveryMethod !== "self_pickup" && (
+                <div className="mt-5 space-y-4">
+                  <Field label="Місто" error={errors.deliveryCity?.message}>
+                    <div className="relative">
+                      <Input
+                        placeholder="Почни вводити — з'явиться підказка"
+                        value={cityQuery}
+                        onChange={(e) => {
+                          setCityQuery(e.target.value);
+                          setCityOpen(true);
+                          setValue("deliveryCity", e.target.value);
+                          setValue("deliveryCityRef", "");
+                          setValue("deliveryBranchNumber", "");
+                          setBranchQuery("");
+                        }}
+                        onFocus={() => setCityOpen(true)}
+                        onBlur={() => setTimeout(() => setCityOpen(false), 150)}
+                        autoComplete="off"
+                      />
+                      {cityOpen && cityLoading && (
                         <p className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-border bg-popover px-3 py-2 text-xs text-muted-foreground shadow-lg">
-                          Нічого не знайдено
+                          Шукаємо міста…
                         </p>
                       )}
-                    {branchOpen &&
-                      !branchesLoading &&
-                      filteredBranches.length > 0 && (
+                      {cityOpen &&
+                        !cityLoading &&
+                        cityQuery.trim().length > 0 &&
+                        cityOptions.length === 0 && (
+                          <p className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-border bg-popover px-3 py-2 text-xs text-muted-foreground shadow-lg">
+                            Нічого не знайдено
+                          </p>
+                        )}
+                      {cityOpen && !cityLoading && cityOptions.length > 0 && (
                         <ul className="absolute left-0 right-0 top-full z-10 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
-                          {filteredBranches.map((br) => (
-                            <li key={br.ref}>
+                          {cityOptions.map((c) => (
+                            <li key={c.ref}>
                               <button
                                 type="button"
                                 className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
                                 onMouseDown={(e) => e.preventDefault()}
                                 onClick={() => {
-                                  setBranchQuery(br.address);
-                                  setBranchOpen(false);
-                                  setValue("deliveryBranchNumber", br.number, {
+                                  setCityQuery(c.name);
+                                  setCityOpen(false);
+                                  setValue("deliveryCity", c.name, {
                                     shouldValidate: true,
                                   });
+                                  setValue("deliveryCityRef", c.ref);
+                                  setValue("deliveryBranchNumber", "");
+                                  setBranchQuery("");
                                 }}
                               >
-                                {br.address}
+                                <span className="font-medium">{c.name}</span>
+                                <span className="ml-2 text-xs text-muted-foreground">
+                                  {c.region}
+                                </span>
                               </button>
                             </li>
                           ))}
                         </ul>
                       )}
-                  </div>
-                </Field>
-              )}
+                    </div>
+                  </Field>
 
-              {deliveryMethod === "np_courier" && (
-                <Field
-                  label="Адреса доставки"
-                  error={errors.deliveryAddress?.message}
-                >
-                  <Input
-                    placeholder="Вулиця, будинок, квартира"
-                    {...register("deliveryAddress")}
-                  />
-                </Field>
-              )}
-            </div>
-          )}
-        </section>
+                  {deliveryMethod === "np_branch" && (
+                    <Field
+                      label="Відділення Нової Пошти"
+                      error={errors.deliveryBranchNumber?.message}
+                    >
+                      <input
+                        type="hidden"
+                        {...register("deliveryBranchNumber")}
+                      />
+                      <div className="relative">
+                        <Input
+                          placeholder={
+                            cityRef
+                              ? "Номер відділення, поштомату або адреса"
+                              : "Спершу оберіть місто"
+                          }
+                          value={branchQuery}
+                          disabled={!cityRef || branchesLoading}
+                          onChange={(e) => {
+                            setBranchQuery(e.target.value);
+                            setBranchOpen(true);
+                            setValue("deliveryBranchNumber", "");
+                          }}
+                          onFocus={() => {
+                            if (cityRef && !branchesLoading)
+                              setBranchOpen(true);
+                          }}
+                          onBlur={() =>
+                            setTimeout(() => setBranchOpen(false), 150)
+                          }
+                          autoComplete="off"
+                        />
+                        {branchOpen && branchesLoading && (
+                          <p className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-border bg-popover px-3 py-2 text-xs text-muted-foreground shadow-lg">
+                            Завантажуємо відділення…
+                          </p>
+                        )}
+                        {branchOpen &&
+                          !branchesLoading &&
+                          cityRef &&
+                          branchQuery.trim().length > 0 &&
+                          filteredBranches.length === 0 && (
+                            <p className="absolute left-0 right-0 top-full z-10 mt-1 rounded-md border border-border bg-popover px-3 py-2 text-xs text-muted-foreground shadow-lg">
+                              Нічого не знайдено
+                            </p>
+                          )}
+                        {branchOpen &&
+                          !branchesLoading &&
+                          filteredBranches.length > 0 && (
+                            <ul className="absolute left-0 right-0 top-full z-10 mt-1 max-h-64 overflow-y-auto rounded-md border border-border bg-popover shadow-lg">
+                              {filteredBranches.map((br) => (
+                                <li key={br.ref}>
+                                  <button
+                                    type="button"
+                                    className="block w-full px-3 py-2 text-left text-sm hover:bg-accent"
+                                    onMouseDown={(e) => e.preventDefault()}
+                                    onClick={() => {
+                                      setBranchQuery(br.address);
+                                      setBranchOpen(false);
+                                      setValue(
+                                        "deliveryBranchNumber",
+                                        br.number,
+                                        {
+                                          shouldValidate: true,
+                                        },
+                                      );
+                                    }}
+                                  >
+                                    {br.address}
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                      </div>
+                    </Field>
+                  )}
 
-        {/* 3 · PAYMENT */}
-        <section className="rounded-lg border border-border bg-surface p-6">
-          <SectionNumber n="3" title="Спосіб оплати" />
-          <div className="mt-5 space-y-3">
-            {visiblePaymentOptions("main").map((opt) => {
-              const active = paymentMethod === opt.value;
-              const disabled = opt.value === "cod" && codDisabled;
-              return (
-                <label
-                  key={opt.value}
-                  className={cn(
-                    "flex cursor-pointer items-start gap-3 rounded-md border p-4 transition",
-                    active
-                      ? "border-foreground bg-surface-elevated"
-                      : "border-border hover:border-white/20",
-                    disabled && "cursor-not-allowed opacity-50",
+                  {deliveryMethod === "np_courier" && (
+                    <Field
+                      label="Адреса доставки"
+                      error={errors.deliveryAddress?.message}
+                    >
+                      <Input
+                        placeholder="Вулиця, будинок, квартира"
+                        {...register("deliveryAddress")}
+                      />
+                    </Field>
                   )}
-                >
-                  <input
-                    type="radio"
-                    value={opt.value}
-                    disabled={disabled}
-                    className="sr-only"
-                    {...register("paymentMethod")}
-                  />
-                  <div
-                    className={cn(
-                      "mt-0.5 flex size-5 items-center justify-center rounded-full border-2 transition",
-                      active
-                        ? "border-foreground"
-                        : "border-muted-foreground/40",
-                    )}
-                  >
-                    {active && (
-                      <div className="size-2 rounded-full bg-foreground" />
-                    )}
-                  </div>
-                  <opt.icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
-                  <div className="flex-1">
-                    <div className="font-medium">{opt.title}</div>
-                    {opt.note && (
-                      <div className="text-xs text-muted-foreground">
-                        {opt.note}
+                </div>
+              )}
+            </section>
+
+            {/* 3 · PAYMENT */}
+            <section className="rounded-lg border border-border bg-surface p-6">
+              <SectionNumber n="3" title="Спосіб оплати" />
+              <div className="mt-5 space-y-3">
+                {visiblePaymentOptions("main").map((opt) => {
+                  const active = paymentMethod === opt.value;
+                  const disabled = opt.value === "cod" && codDisabled;
+                  return (
+                    <label
+                      key={opt.value}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-3 rounded-md border p-4 transition",
+                        active
+                          ? "border-foreground bg-surface-elevated"
+                          : "border-border hover:border-white/20",
+                        disabled && "cursor-not-allowed opacity-50",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        value={opt.value}
+                        disabled={disabled}
+                        className="sr-only"
+                        {...register("paymentMethod")}
+                      />
+                      <div
+                        className={cn(
+                          "mt-0.5 flex size-5 items-center justify-center rounded-full border-2 transition",
+                          active
+                            ? "border-foreground"
+                            : "border-muted-foreground/40",
+                        )}
+                      >
+                        {active && (
+                          <div className="size-2 rounded-full bg-foreground" />
+                        )}
                       </div>
-                    )}
-                    {opt.value === "monobank_parts" && (
-                      <div className="tabular mt-1 text-xs text-muted-foreground">
-                        {formatInstallment(orderTotalUah, 4)}
+                      <opt.icon className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+                      <div className="flex-1">
+                        <div className="font-medium">{opt.title}</div>
+                        {opt.note && (
+                          <div className="text-xs text-muted-foreground">
+                            {opt.note}
+                          </div>
+                        )}
+                        {opt.value === "monobank_parts" && (
+                          <div className="tabular mt-1 text-xs text-muted-foreground">
+                            {formatInstallment(orderTotalUah, 4)}
+                          </div>
+                        )}
+                        {opt.value === "monopay" && (
+                          <div className="tabular mt-1 text-xs text-muted-foreground">
+                            Підсумок з комісією:{" "}
+                            <span className="font-semibold text-foreground">
+                              {formatPrice(monopayTotalUah)}
+                            </span>
+                          </div>
+                        )}
+                        {opt.value === "cod" && codDisabled && (
+                          <div className="mt-1 text-xs text-destructive">
+                            Недоступно при самовивозі
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {opt.value === "monopay" && (
-                      <div className="tabular mt-1 text-xs text-muted-foreground">
-                        Підсумок з комісією:{" "}
-                        <span className="font-semibold text-foreground">
-                          {formatPrice(monopayTotalUah)}
-                        </span>
+                    </label>
+                  );
+                })}
+              </div>
+              <div className="mt-4 text-[11px] uppercase tracking-wider text-muted-foreground">
+                ─── Інші способи ───
+              </div>
+              <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                {visiblePaymentOptions("other").map((opt) => {
+                  const active = paymentMethod === opt.value;
+                  return (
+                    <label
+                      key={opt.value}
+                      className={cn(
+                        "flex cursor-pointer items-start gap-2 rounded-md border p-3 text-xs transition",
+                        active
+                          ? "border-foreground bg-surface-elevated"
+                          : "border-border hover:border-white/20",
+                      )}
+                    >
+                      <input
+                        type="radio"
+                        value={opt.value}
+                        className="sr-only"
+                        {...register("paymentMethod")}
+                      />
+                      <opt.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+                      <div>
+                        <div className="font-medium">{opt.title}</div>
+                        {opt.note && (
+                          <div className="text-[11px] text-muted-foreground">
+                            {opt.note}
+                          </div>
+                        )}
                       </div>
-                    )}
-                    {opt.value === "cod" && codDisabled && (
-                      <div className="mt-1 text-xs text-destructive">
-                        Недоступно при самовивозі
-                      </div>
-                    )}
-                  </div>
-                </label>
-              );
-            })}
-          </div>
-          <div className="mt-4 text-[11px] uppercase tracking-wider text-muted-foreground">
-            ─── Інші способи ───
-          </div>
-          <div className="mt-3 grid gap-2 sm:grid-cols-3">
-            {visiblePaymentOptions("other").map((opt) => {
-              const active = paymentMethod === opt.value;
-              return (
-                <label
-                  key={opt.value}
-                  className={cn(
-                    "flex cursor-pointer items-start gap-2 rounded-md border p-3 text-xs transition",
-                    active
-                      ? "border-foreground bg-surface-elevated"
-                      : "border-border hover:border-white/20",
-                  )}
-                >
-                  <input
-                    type="radio"
-                    value={opt.value}
-                    className="sr-only"
-                    {...register("paymentMethod")}
-                  />
-                  <opt.icon className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
-                  <div>
-                    <div className="font-medium">{opt.title}</div>
-                    {opt.note && (
-                      <div className="text-[11px] text-muted-foreground">
-                        {opt.note}
-                      </div>
-                    )}
-                  </div>
-                </label>
-              );
-            })}
-          </div>
-        </section>
+                    </label>
+                  );
+                })}
+              </div>
+            </section>
+          </>
+        )}
 
         {/* 4 · CONFIRM */}
         <section className="rounded-lg border border-border bg-surface p-6">
-          <SectionNumber n="4" title="Готовий?" />
+          <SectionNumber
+            n={CHECKOUT_CONTACTS_ONLY ? "2" : "4"}
+            title="Готовий?"
+          />
           <div className="mt-5 space-y-4">
-            <Field label="Коментар до замовлення" hint="Не обов'язково">
-              <textarea
-                {...register("customerComment")}
-                rows={3}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus-visible:border-ring focus-visible:outline-none"
-                placeholder="Побажання, деталі, зручний час дзвінка..."
-              />
-            </Field>
+            {CHECKOUT_CONTACTS_ONLY ? (
+              <p className="text-sm text-muted-foreground">
+                Менеджер зателефонує, щоб підтвердити замовлення та узгодити
+                доставку й оплату.
+              </p>
+            ) : (
+              <>
+                <Field label="Коментар до замовлення" hint="Не обов'язково">
+                  <textarea
+                    {...register("customerComment")}
+                    rows={3}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm focus-visible:border-ring focus-visible:outline-none"
+                    placeholder="Побажання, деталі, зручний час дзвінка..."
+                  />
+                </Field>
 
-            <label className="flex cursor-pointer items-start gap-3 text-sm">
-              <input
-                type="checkbox"
-                {...register("consent")}
-                className="mt-0.5 size-4 shrink-0 rounded border-border"
-              />
-              <span className="text-muted-foreground">
-                Погоджуюсь з умовами{" "}
-                <Link
-                  href="/legal/publichna-oferta"
-                  className="text-foreground underline underline-offset-4"
-                >
-                  публічної оферти
-                </Link>{" "}
-                та{" "}
-                <Link
-                  href="/legal/politika-konfidentsiynosti"
-                  className="text-foreground underline underline-offset-4"
-                >
-                  політикою конфіденційності
-                </Link>
-              </span>
-            </label>
-            {errors.consent?.message && (
-              <div className="text-xs text-destructive">
-                {errors.consent.message}
-              </div>
+                <label className="flex cursor-pointer items-start gap-3 text-sm">
+                  <input
+                    type="checkbox"
+                    {...register("consent")}
+                    className="mt-0.5 size-4 shrink-0 rounded border-border"
+                  />
+                  <span className="text-muted-foreground">
+                    Погоджуюсь з умовами{" "}
+                    <Link
+                      href="/legal/publichna-oferta"
+                      className="text-foreground underline underline-offset-4"
+                    >
+                      публічної оферти
+                    </Link>{" "}
+                    та{" "}
+                    <Link
+                      href="/legal/politika-konfidentsiynosti"
+                      className="text-foreground underline underline-offset-4"
+                    >
+                      політикою конфіденційності
+                    </Link>
+                  </span>
+                </label>
+                {errors.consent?.message && (
+                  <div className="text-xs text-destructive">
+                    {errors.consent.message}
+                  </div>
+                )}
+              </>
             )}
 
             {submitError && (
@@ -1036,8 +1071,30 @@ export function CheckoutView() {
               className="w-full"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Оформлюємо..." : "Підтвердити замовлення"}
+              {isSubmitting
+                ? "Оформлюємо..."
+                : CHECKOUT_CONTACTS_ONLY
+                  ? "Залишити заявку"
+                  : "Підтвердити замовлення"}
             </TechButton>
+            {CHECKOUT_CONTACTS_ONLY && (
+              <p className="text-center text-xs text-muted-foreground">
+                Натискаючи кнопку, погоджуюсь з умовами{" "}
+                <Link
+                  href="/legal/publichna-oferta"
+                  className="text-foreground underline underline-offset-4"
+                >
+                  публічної оферти
+                </Link>{" "}
+                та{" "}
+                <Link
+                  href="/legal/politika-konfidentsiynosti"
+                  className="text-foreground underline underline-offset-4"
+                >
+                  політикою конфіденційності
+                </Link>
+              </p>
+            )}
             <p className="text-center text-[11px] uppercase tracking-wider text-muted-foreground">
               Гарантія 12 міс · Повернення 14 днів
             </p>
@@ -1131,10 +1188,12 @@ export function CheckoutView() {
               <span className="tabular">−{formatPrice(discountUah)}</span>
             </div>
           ) : null}
-          <div className="flex justify-between text-muted-foreground">
-            <span>Доставка</span>
-            <span>{deliverySummaryLabel(deliveryMethod)}</span>
-          </div>
+          {!CHECKOUT_CONTACTS_ONLY && (
+            <div className="flex justify-between text-muted-foreground">
+              <span>Доставка</span>
+              <span>{deliverySummaryLabel(deliveryMethod)}</span>
+            </div>
+          )}
         </div>
 
         <div className="rounded-md border border-border bg-background/50 p-3">
@@ -1202,10 +1261,10 @@ export function CheckoutView() {
 
         <div className="border-t border-border pt-3">
           <div className="text-[11px] uppercase tracking-wider text-muted-foreground">
-            До сплати
+            {CHECKOUT_CONTACTS_ONLY ? "Разом" : "До сплати"}
           </div>
           <div className="tabular font-heading text-3xl font-bold">
-            {paymentMethod === "monopay"
+            {!CHECKOUT_CONTACTS_ONLY && paymentMethod === "monopay"
               ? formatPrice(monopayTotalUah)
               : formatPrice(orderTotalUah)}
           </div>

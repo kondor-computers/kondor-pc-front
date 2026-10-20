@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { CHECKOUT_CONTACTS_ONLY } from "@/lib/checkout/mode";
 
 const PHONE_REGEX = /^\+380\d{9}$/;
 
@@ -50,6 +51,8 @@ export const orderSchema = baseContact.extend({
     message: "Потрібна згода з офертою",
   }),
 }).superRefine((v, ctx) => {
+  // Режим «тільки контакти»: доставку не збираємо, менеджер уточнить сам.
+  if (CHECKOUT_CONTACTS_ONLY) return;
   if (v.deliveryMethod === "np_branch") {
     if (!v.deliveryCity) ctx.addIssue({ code: "custom", path: ["deliveryCity"], message: "Оберіть місто" });
     if (!v.deliveryBranchNumber) ctx.addIssue({ code: "custom", path: ["deliveryBranchNumber"], message: "Оберіть відділення" });
