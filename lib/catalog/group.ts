@@ -91,9 +91,13 @@ export function groupProducts(
 
   const groups: CatalogProductGroup[] = [];
   for (const [key, variants] of byKey) {
-    // Deterministic variant order — discounted first, then by slug. Keeps the
-    // default swatch stable between renders.
+    // Deterministic variant order — in-stock first (so the default swatch is
+    // never an unavailable colour when a sibling can be bought), then
+    // discounted, then by slug. Keeps the default swatch stable between renders.
     variants.sort((a, b) => {
+      const aOut = a.outOfStock ? 1 : 0;
+      const bOut = b.outOfStock ? 1 : 0;
+      if (aOut !== bOut) return aOut - bOut;
       const aDisc =
         typeof a.priceDiscount === "number" && a.priceDiscount < a.price ? 1 : 0;
       const bDisc =

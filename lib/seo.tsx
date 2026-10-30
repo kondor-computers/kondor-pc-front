@@ -152,9 +152,11 @@ export function catalogProductJsonLd(
       url: `${SITE_URL}/catalog/${item.slug}`,
       priceCurrency: "UAH",
       price: String(price),
-      availability: item.preorder
-        ? "https://schema.org/PreOrder"
-        : "https://schema.org/InStock",
+      availability: item.outOfStock
+        ? "https://schema.org/OutOfStock"
+        : item.preorder
+          ? "https://schema.org/PreOrder"
+          : "https://schema.org/InStock",
       itemCondition: "https://schema.org/NewCondition",
       seller: {
         "@type": "Organization",

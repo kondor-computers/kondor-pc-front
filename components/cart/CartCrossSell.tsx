@@ -49,8 +49,9 @@ export function CartCrossSell() {
   if (!hasBuild || !addons || addons.length === 0) return null;
 
   // Show top 3 that aren't already in the cart, preferring discounted items.
+  // Out-of-stock items are never suggested — the row only has a "+" button.
   const suggestions = addons
-    .filter((a) => !accessorySlugsInCart.has(a.slug))
+    .filter((a) => !a.outOfStock && !accessorySlugsInCart.has(a.slug))
     .sort((a, b) => {
       const aDisc =
         typeof a.priceDiscount === "number" && a.priceDiscount < a.price

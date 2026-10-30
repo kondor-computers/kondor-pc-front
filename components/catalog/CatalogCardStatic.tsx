@@ -91,7 +91,7 @@ className="object-cover"
             Новинка
           </span>
         )}
-        {variant.preorder && (
+        {variant.preorder && !variant.outOfStock && (
           <span className="absolute right-3 top-3 rounded-full border border-border bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground backdrop-blur">
             Передзамовлення
           </span>
