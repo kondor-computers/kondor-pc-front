@@ -121,6 +121,9 @@ export function CatalogCard({
     activeSwatch?.variant ?? group.variants[0];
   const committedVariant: CatalogProductListItem =
     committedSwatch?.variant ?? group.variants[0];
+  // The buy button follows the committed variant (what a click actually adds
+  // to the cart), not the hover preview.
+  const committedOutOfStock = !!committedVariant.outOfStock;
 
   const fallbackGallery = useMemo(() => {
     const seen = new Set<string>();
@@ -165,6 +168,7 @@ export function CatalogCard({
   const [justAdded, setJustAdded] = useState(false);
 
   function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
+    if (committedOutOfStock) return;
     openDrawer();
     const committedHasDiscount =
       typeof committedVariant.priceDiscount === "number" &&
@@ -280,7 +284,7 @@ export function CatalogCard({
               Новинка
             </span>
           )}
-          {activeVariant.preorder && (
+          {activeVariant.preorder && !activeVariant.outOfStock && (
             <span className="absolute right-3 top-3 rounded-full border border-border bg-background/80 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-muted-foreground backdrop-blur">
               Передзамовлення
             </span>
@@ -411,12 +415,14 @@ export function CatalogCard({
             </div>
             <TechButton
               size="sm"
-              variant="inverse"
+              variant={committedOutOfStock ? "muted" : "inverse"}
               className="w-full h-9 font-heading tracking-normal"
               onClick={handleAdd}
-              disabled={justAdded}
+              disabled={committedOutOfStock || justAdded}
             >
-              {justAdded ? (
+              {committedOutOfStock ? (
+                "Немає в наявності"
+              ) : justAdded ? (
                 <>
                   <Check className="mr-1 size-3.5" strokeWidth={2.5} />
                   Додано

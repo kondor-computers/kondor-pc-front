@@ -42,6 +42,12 @@ export interface CatalogProductListItem {
   priceDiscount?: number;
   newItem?: boolean;
   preorder?: boolean;
+  /**
+   * "Немає в наявності" toggle from the admin. Unset on most documents, so
+   * treat anything but `true` as in stock. Takes priority over `preorder`
+   * (the admin hides the preorder fields when it is on).
+   */
+  outOfStock?: boolean;
   /** Homepage-only teaser flag — excluded from the catalog listing (see `ALL_ITEMS`). */
   showonmain?: boolean;
   badge?: CatalogBadge;
@@ -122,6 +128,8 @@ export interface CatalogProductDetail {
   newItem?: boolean;
   preorder?: boolean;
   preordertext?: string;
+  /** See `CatalogProductListItem.outOfStock`. */
+  outOfStock?: boolean;
   manual?: string;
   driver?: string;
   video?: { url?: string };

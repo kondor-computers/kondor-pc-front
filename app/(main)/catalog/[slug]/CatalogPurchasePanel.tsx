@@ -28,6 +28,7 @@ export function CatalogPurchasePanel() {
   const hasDiscount =
     typeof item.priceDiscount === "number" && item.priceDiscount < item.price;
   const finalPrice = hasDiscount ? item.priceDiscount! : item.price;
+  const outOfStock = !!item.outOfStock;
 
   const [animationKey, setAnimationKey] = useState<number | null>(null);
   const [startPos, setStartPos] = useState<{
@@ -73,6 +74,7 @@ export function CatalogPurchasePanel() {
   }
 
   function buyNow() {
+    if (outOfStock) return;
     add({
       itemType: "accessory",
       slug: item.slug,
@@ -132,7 +134,7 @@ export function CatalogPurchasePanel() {
           </div>
         )}
 
-        {item.preorder && (
+        {item.preorder && !outOfStock && (
           <div className="flex gap-2 rounded-md border border-border bg-surface/60 p-3 text-xs text-muted-foreground">
             <Info className="size-4 shrink-0 text-foreground" />
             <div>
@@ -147,25 +149,28 @@ export function CatalogPurchasePanel() {
             size="lg"
             className="flex-1"
             onClick={buyNow}
-            variant="inverse"
+            variant={outOfStock ? "muted" : "inverse"}
+            disabled={outOfStock}
           >
-            Купити зараз
+            {outOfStock ? "Немає в наявності" : "Купити зараз"}
           </TechButton>
-          <TechButton
-            size="lg"
-            variant="muted"
-            className="flex-1"
-            onClick={addToCart}
-          >
-            {justAdded ? (
-              <>
-                <Check className="mr-1 size-4" strokeWidth={2.5} />
-                Додано
-              </>
-            ) : (
-              "Додати в кошик"
-            )}
-          </TechButton>
+          {!outOfStock && (
+            <TechButton
+              size="lg"
+              variant="muted"
+              className="flex-1"
+              onClick={addToCart}
+            >
+              {justAdded ? (
+                <>
+                  <Check className="mr-1 size-4" strokeWidth={2.5} />
+                  Додано
+                </>
+              ) : (
+                "Додати в кошик"
+              )}
+            </TechButton>
+          )}
         </div>
 
         {(item.manual || item.driver) && (

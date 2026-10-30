@@ -34,10 +34,12 @@ export function CatalogCardBuyButton({
     left: number;
   } | null>(null);
   const [justAdded, setJustAdded] = useState(false);
+  const outOfStock = !!variant.outOfStock;
 
   function handleAdd(e: React.MouseEvent<HTMLButtonElement>) {
     e.preventDefault();
     e.stopPropagation();
+    if (outOfStock) return;
     openDrawer();
 
     if (thumbUrl) {
@@ -71,12 +73,14 @@ export function CatalogCardBuyButton({
     <>
       <TechButton
         size="sm"
-        variant="inverse"
+        variant={outOfStock ? "muted" : "inverse"}
         className={className}
         onClick={handleAdd}
-        disabled={justAdded}
+        disabled={outOfStock || justAdded}
       >
-        {justAdded ? (
+        {outOfStock ? (
+          "Немає в наявності"
+        ) : justAdded ? (
           <>
             <Check className="mr-1 size-3.5" strokeWidth={2.5} />
             Додано
