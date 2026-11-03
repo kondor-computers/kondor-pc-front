@@ -6,4 +6,4 @@
  *
  * Щоб повернути повний чекаут з оплатою — постав `false`.
  */
-export const CHECKOUT_CONTACTS_ONLY = true;
+export const CHECKOUT_CONTACTS_ONLY = false;
