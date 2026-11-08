@@ -4,10 +4,10 @@ import { buildFeedXml } from "@/lib/feed";
 import { getAllBuilds } from "@/lib/sanity-pc/builds";
 
 // Той самий підхід до кешування, що й у /api/feed/meta: статична відповідь,
-// що перегенеровується не частіше ніж раз на годину. Літерал має збігатися з
+// що перегенеровується не частіше ніж раз на добу. Літерал має збігатися з
 // SANITY_REVALIDATE_SECONDS (lib/sanity/revalidate.ts).
 export const dynamic = "force-static";
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function GET() {
   try {

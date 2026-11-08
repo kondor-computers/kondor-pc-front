@@ -19,7 +19,7 @@ import { LazyCatalogGalleryOverlay } from "./LazyCatalogGalleryOverlay";
 import { LazyCatalogPurchasePanel } from "./LazyCatalogPurchasePanel";
 import { CatalogDetailSections } from "./CatalogDetailSections";
 
-export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
+export const revalidate = 86400; // 24h fallback; see lib/sanity/revalidate.ts
 
 export async function generateStaticParams() {
   const items = await getCatalogItems();

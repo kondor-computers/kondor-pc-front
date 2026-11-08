@@ -5,11 +5,11 @@ import { getAllBuilds } from "@/lib/sanity-pc/builds";
 
 // GET Route Handler'и в Next.js 15 за замовчуванням не кешуються — кожен
 // запит бота Meta бив би напряму в Sanity. "force-static" вмикає ISR:
-// відповідь генерується раз і перегенеровується не частіше ніж раз на годину.
+// відповідь генерується раз і перегенеровується не частіше ніж раз на добу.
 // Літерал має збігатися з SANITY_REVALIDATE_SECONDS (lib/sanity/revalidate.ts).
 // Достроково кеш скидається вебхуком Sanity — див. app/api/revalidate/route.ts.
 export const dynamic = "force-static";
-export const revalidate = 3600;
+export const revalidate = 86400;
 
 export async function GET() {
   try {

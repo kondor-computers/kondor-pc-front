@@ -14,7 +14,7 @@ import {
   parseFiltersFromParams,
 } from "@/lib/catalog/accessoryFilters";
 
-export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
+export const revalidate = 86400; // 24h fallback; see lib/sanity/revalidate.ts
 
 function hasSeoFilterParams(
   params: Record<string, string | undefined>,
