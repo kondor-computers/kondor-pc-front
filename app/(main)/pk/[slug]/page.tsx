@@ -69,7 +69,7 @@ import { BuildHeroTitle } from "./BuildHeroTitle";
 import { LazyProductGallery } from "./LazyProductGallery";
 import { BuildGameplayVideo } from "./BuildGameplayVideo";
 
-export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
+export const revalidate = 86400; // 24h fallback; see lib/sanity/revalidate.ts
 
 export async function generateStaticParams() {
   return getBuildSlugs();

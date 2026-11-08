@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return metadataForSitePage("seoPickerPage");
 }
 
-export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
+export const revalidate = 86400; // 24h fallback; see lib/sanity/revalidate.ts
 
 export default async function PidbirPage() {
   const [gamesCatalog, gamePcLandings] = await Promise.all([

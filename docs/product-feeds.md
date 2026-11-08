@@ -54,7 +54,7 @@ https://www.kondorpc.com.ua/api/feed/meta
 
 ### Кешування й оновлення
 
-- Роут статичний: `dynamic = "force-static"`, `revalidate = 3600` (`app/api/feed/meta/route.ts`). Літерал має збігатися з `SANITY_REVALIDATE_SECONDS` (`lib/sanity/revalidate.ts`).
+- Роут статичний: `dynamic = "force-static"`, `revalidate = 86400` (доба, `app/api/feed/meta/route.ts`). Літерал має збігатися з `SANITY_REVALIDATE_SECONDS` (`lib/sanity/revalidate.ts`) — це перевіряє тест `lib/sanity/revalidate.test.ts`.
 - Одразу після зміни збірки в Sanity кеш скидає вебхук `POST /api/revalidate` (гілка `build`: тег `sanity:pc:builds` і шляхи `/api/feed/meta`, `/api/feed/google`).
 - Налаштування вебхука (Sanity → Project `if6dzz62` → API → Webhooks; один вебхук обслуговує обидва фіди):
   - URL: `https://www.kondorpc.com.ua/api/revalidate`;
@@ -83,7 +83,7 @@ https://www.kondorpc.com.ua/api/feed/google
 
 - Формат той самий, що й у Meta: RSS 2.0 з `xmlns:g` (це офіційний формат Google Merchant Center).
 - Логіка спільна з Meta (`lib/feed.ts`, функції `buildFeedXml` / `buildFeedItemXml` з параметром `platform`): ті самі `id`, посилання, ціни й фільтр.
-- Кешування й дострокове оновлення — як у Meta (`revalidate = 3600`, вебхук `/api/revalidate`).
+- Кешування й дострокове оновлення — як у Meta (`revalidate = 86400`, вебхук `/api/revalidate`).
 
 ### Чим відрізняється від Meta
 

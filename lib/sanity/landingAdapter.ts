@@ -181,7 +181,15 @@ export async function fetchLandingPageBySlug(
     {
       next: {
         revalidate: SANITY_REVALIDATE_SECONDS,
-        tags: [`landing:${prefix}:${slug}`, "landings:all"],
+        // `landings:tags` / `promo-codes` — теги документів, які запит розгортає
+        // через `->` (`tags[]->`, `promoCode->`): без них їхня правка не
+        // дістається до сторінки лендингу (див. lib/sanity/revalidateTargets.ts).
+        tags: [
+          `landing:${prefix}:${slug}`,
+          "landings:all",
+          "landings:tags",
+          "promo-codes",
+        ],
       },
     },
   );

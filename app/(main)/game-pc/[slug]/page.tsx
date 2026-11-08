@@ -14,7 +14,7 @@ import {JsonLd, faqPageJsonLd} from "@/lib/seo";
 import {extractLandingFaqSchemaItems} from "@/lib/seo/faqSchema";
 
 // ISR + on-demand revalidation via Sanity webhook → /api/revalidate.
-export const revalidate = 3600; // 1h fallback; see lib/sanity/revalidate.ts
+export const revalidate = 86400; // 24h fallback; see lib/sanity/revalidate.ts
 export const dynamicParams = true;
 
 export async function generateStaticParams() {
