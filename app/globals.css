@@ -263,26 +263,22 @@
 }
 
 /*
- * ZenterSP has no Ukrainian glyphs (і, ї, є, ґ). Restrict it to Latin via
- * unicode-range so Cyrillic falls through to Unbounded automatically.
+ * ZenterSP is declared once, in app/layout.tsx (next/font/local), and reached
+ * through `--font-display`. Do not declare it here again — see the comment in
+ * layout.tsx.
  */
-@font-face {
-  font-family: "ZenterSP";
-  src: url("/fonts/ZenterSPDemo.woff2") format("woff2");
-  font-display: swap;
-  unicode-range: U+0000-024F;
-}
-
 @layer utilities {
   .font-display {
     font-family:
-      "ZenterSP", var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+      var(--font-display), var(--font-heading), ui-sans-serif, system-ui,
+      sans-serif;
     letter-spacing: -0.01em;
   }
 
   .font-wide {
     font-family:
-      "ZenterSP", var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+      var(--font-display), var(--font-heading), ui-sans-serif, system-ui,
+      sans-serif;
     letter-spacing: 0.06em;
   }
 

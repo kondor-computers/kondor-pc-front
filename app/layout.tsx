@@ -23,14 +23,31 @@ const unbounded = Unbounded({
   display: "swap",
 });
 
-// Latin-only display face (Cyrillic falls through to Unbounded via the
-// unicode-range @font-face in globals.css). It is never used by the Cyrillic
-// hero H1, so we skip preloading it to free 4G bandwidth for the LCP image.
+// Display face behind `.font-display` / `.font-wide` (see globals.css).
+// It is never used by the Cyrillic hero H1, so we skip preloading it to free
+// 4G bandwidth for the LCP image.
+//
+// Declared ONCE, here. Do not add a second @font-face for this file in
+// globals.css: family names that differ only by case ("zenterSP" vs
+// "ZenterSP") are the same family, and the identical bytes were downloaded
+// twice (once from /_next/static/media, once from /fonts).
+//
+// ZenterSP has the Russian Cyrillic letters but not the Ukrainian ones
+// (і, ї, є, ґ), so in Ukrainian headings it draws Г, Р, О, В, … and the
+// missing letters fall through to Unbounded. That is how the site has always
+// rendered and it is unchanged. Restricting Zenter to Latin with
+// `declarations: [{ prop: "unicode-range", … }]` has no effect under
+// Turbopack (checked on Next 15.5), so it cannot be done from here.
+//
+// `adjustFontFallback: false` keeps the generated "zenterSP Fallback" (Arial)
+// face out of `--font-display`; otherwise і/ї/є/ґ would fall to Arial instead
+// of Unbounded.
 const zenterSP = localFont({
   src: "../public/fonts/ZenterSPDemo.woff2",
   variable: "--font-display",
   display: "swap",
   preload: false,
+  adjustFontFallback: false,
 });
 
 const metadataBase = (() => {
