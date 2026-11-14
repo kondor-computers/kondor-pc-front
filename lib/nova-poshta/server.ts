@@ -49,7 +49,9 @@ async function novaPoshtaRequest<T>(
       calledMethod,
       methodProperties,
     }),
-    next: { revalidate: 3600 },
+    // Live data (warehouse status changes during the day) and no Data Cache:
+    // every unique search body would be its own ISR write on Vercel Hobby.
+    cache: "no-store",
   });
 
   if (!res.ok) {
