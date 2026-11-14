@@ -26,7 +26,9 @@ export async function fetchMonopayPubKey(): Promise<string> {
 
   const response = await fetch(`${MONOBANK_API}/pubkey`, {
     headers: { "X-Token": getMonopayToken() },
-    next: { revalidate: 3600 },
+    // Live key on every call: a cached key would break payment-callback
+    // verification after Monobank rotates it, and each cache entry is an ISR write.
+    cache: "no-store",
   });
 
   if (!response.ok) {
